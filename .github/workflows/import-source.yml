@@ -1,0 +1,38 @@
+name: Import verified Stage 8 Git history
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: source-import
+  cancel-in-progress: false
+jobs:
+  import:
+    if: github.repository == 'harshvtomar/robomotion-ai' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify and merge original history without rewriting commits
+        run: |
+          set -euo pipefail
+          base64 --decode .publication/source.bundle.b64 > /tmp/source.bundle
+          echo '4d748cfec6a75e35710bf6ccffa70f606aaa9d6525db6626d5f51bf87e6788e3  /tmp/source.bundle' | sha256sum --check
+          git bundle verify /tmp/source.bundle
+          git fetch /tmp/source.bundle main:refs/remotes/source/main
+          test "$(git rev-parse refs/remotes/source/main)" = '19f7cf83487461ea0f924c9d77f0fa7b98e7f7fb'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git merge --no-ff --allow-unrelated-histories refs/remotes/source/main -m "Publish Stage 8 source preserving complete original Git history"
+          git rm .publication/source.bundle.b64
+          git commit -m "Remove temporary source transport after verified history import"
+          git merge-base --is-ancestor a4c122d HEAD
+          git fsck --full
+      - name: Validate imported release
+        run: npm ci --no-audit --no-fund && npm run verify
+      - name: Publish fast-forward only
+        run: git push origin HEAD:main
