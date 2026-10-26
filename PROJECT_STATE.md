@@ -1,36 +1,22 @@
-# RoboMotion AI — project state (Stage 7 implementation)
+# RoboMotion AI — Project state at Stage 8 source handoff
 
-- **Version:** 0.7.0
-- **Source lineage:** Stage 6 full verified-source ZIP `RoboMotion_AI_Stage6_Gesture_Robot_Integration.zip` → Stage 7 additive changes
-- **Implemented:** Stages 1–7, preserving the exact Stage 6 gesture gating and earlier manual robotics paths
-- **Stage 7 scope delivered:** engineering dashboard; event taxonomy; local bounded timeline; CSV/JSON export; five-step optional demo; robot-focused camera toggle; responsive diagnostics layout
-- **Progress:** 7 of 8 development stages implemented (87.5% by stage count, not production-readiness percentage)
+**Version:** 0.8.0 · **Project mode:** browser simulation only · **Development stages:** 8/8 source implementations present.
 
-## Regression evidence
+## Source lineage and preserved modules
 
-- Stage 6 archive baseline: **203/203 tests passed** before changes.
-- Stage 7 suite: **241/241 Node tests passed** (includes 38 new tests).
-- `npm run typecheck:core`: passed, including Stage 7 telemetry domain.
-- TypeScript/TSX syntactic parsing: see Stage 7 completion report.
-- Full application TypeScript/Vite build: **pending on Mac**, because npm package downloads are inaccessible in this execution environment.
-- Full browser, WebGL and webcam QA: **pending on Mac**. The user confirmed that Stage 6 motion resumed; Stage 7 controls are not yet independently verified in a browser.
+Direct copy of actual Stage 7 source and `.git` history, based on verified Stage 6 safety controller. Retains Stages 1–7: React/Three.js scene, six-joint pose controls, FK/IK target motion, sampled virtual object manipulation, MediaPipe gesture lab, safety-gated live gesture teleoperation, diagnostics/events/exports and guided demo.
 
-## Safety and privacy invariants
+## Stage 8 additions
 
-1. No physical robot driver or external hardware control.
-2. Stage 6 `canArm`, `handleGestureFrame`, `expireTracking`, `gesturePoseStep` and E-stop gating remain in charge of all movement.
-3. Synthetic hand fixtures cannot arm the robot or drive joints.
-4. Manual commands disarm gesture control and E-stop remains latched until explicitly reset.
-5. Session diagnostics never store webcam frames, landmarks, image blobs, recordings or identity information.
-6. Export is initiated only by the operator; clearing telemetry is explicit. No browser storage or network telemetry is used.
+- Split the 3D rendering and gesture UI into separate React.lazy/Suspense chunks while preserving on-demand MediaPipe import.
+- Responsive camera framing policy in `src/core/camera.ts`, with safe bounds and tests.
+- Release diagnostics scripts (`scripts/release-audit.mjs`, `scripts/bundle-report.mjs`) and an explicit bundle baseline comparator.
+- Versioned project metadata/UI roadmap and keyboard/reduced-motion fallback styles.
+- GitHub CI and an **opt-in** GitHub Pages workflow with configurable Vite base path.
+- Release QA, privacy/limitations, deployment, demo script, case study and resume documents.
 
-## Known engineering limitations
+## Verification status
 
-- Dashboard motion metrics are based on **commanded** robot pose. Camera tracking and render settling may lag.
-- CSV/JSON history is bounded, not a complete permanent audit log.
-- Reversible camera focus is approximate framing, not adaptive object-bounds fitting.
-- Test source lineage includes Stage 6 Git history; no Stage 8 work has been performed.
+See `STAGE_8_COMPLETION_REPORT.md` for executed tests. Full npm dependency installation and browser QA are not verified in this environment. Mac user must run `npm run verify` and the 19-item checklist before Stage 8 can be described as fully accepted.
 
-## Next action
-
-Run all Mac checks in `docs/QA.md`, including repeated gesture movement, manual override, gripper, E-stop, diagnostics exports and console errors. Then start **Stage 8 — Final Integration & QA** from this archive only.
+**Explicit exclusions:** physical robot control, full collision dynamics, webcam uploads, face/identity recognition, guaranteed gesture accuracy, unmeasured performance gains and invented public URLs.

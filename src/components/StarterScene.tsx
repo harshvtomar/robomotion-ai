@@ -9,19 +9,20 @@ import type { Vector3 } from '../core/kinematics';
 import { RobotArm } from './RobotArm';
 import { VirtualStations } from './VirtualObjects';
 import type { VirtualObject } from '../core/manipulation';
+import { cameraDistanceScale, cameraTargetHeight } from '../core/camera';
 
 function CameraRig({ preset, resetVersion, focusRobot }: { preset: CameraPreset; resetVersion: number; focusRobot: boolean }) {
-  const { camera, invalidate } = useThree();
+  const { camera, invalidate, size } = useThree();
   useEffect(() => {
     const pose = CAMERA_PRESETS[preset];
-    const scale=focusRobot ? 0.73 : 1;
-    const targetY=focusRobot ? 1.8 : 1.35;
+    const scale = cameraDistanceScale(size.width / Math.max(size.height, 1), focusRobot);
+    const targetY = cameraTargetHeight(focusRobot);
     camera.position.set(pose.x*scale, targetY+(pose.y-1.35)*scale, pose.z*scale);
     camera.lookAt(0, targetY, 0);
     camera.updateProjectionMatrix();
     invalidate();
-  }, [camera, preset, resetVersion, focusRobot, invalidate]);
-  return <OrbitControls key={`${preset}:${resetVersion}:${focusRobot}`} target={[0, focusRobot ? 1.8 : 1.35, 0]} enableDamping dampingFactor={0.08} minDistance={2.8} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
+  }, [camera, preset, resetVersion, focusRobot, invalidate, size.width, size.height]);
+  return <OrbitControls key={`${preset}:${resetVersion}:${focusRobot}`} target={[0, cameraTargetHeight(focusRobot), 0]} enableDamping dampingFactor={0.08} minDistance={2.8} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
 }
 
 function CalibrationBeacon({ running }: { running: boolean }) {

@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import type { CSSProperties, Dispatch } from 'react';
 import { SceneErrorBoundary } from './components/SceneErrorBoundary';
-import { StarterScene } from './components/StarterScene';
+// Split the WebGL renderer into an independently loadable chunk. The simulation
+// stays accessible even when the device cannot create a WebGL context.
+const StarterScene = lazy(() => import('./components/StarterScene').then(m => ({default:m.StarterScene})));
 import { Icon } from './components/Icons';
 import { DEVELOPMENT_STAGES, INITIAL_SCENE, STAGE_TOTAL, WORKSPACE, sceneReducer } from './core/stage1';
 import type { CameraPreset } from './core/stage1';
@@ -11,7 +13,8 @@ import { distance, formatMetres, forwardKinematics, inverseKinematics, ROBOT_GEO
 import type { Vector3 } from './core/kinematics';
 import { planMotion, sampleMotion } from './core/motion';
 import { ManipulationControls } from './components/ManipulationControls';
-import { GestureLab } from './components/GestureLab';
+// The webcam UI is separate from the robot and never initializes a camera on import.
+const GestureLab = lazy(() => import('./components/GestureLab').then(m => ({default:m.GestureLab})));
 import { GestureControlPanel } from './components/GestureControlPanel';
 import { EngineeringDashboard } from './components/EngineeringDashboard';
 import { emptyDiagnostics, recordEvent, diagnosticsCsv, diagnosticsJson } from './core/diagnostics';
@@ -37,7 +40,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <div><div className="brand-title">ROBO<span>MOTION</span></div><div className="brand-subtitle">ENGINEERING LAB <b>AI</b></div></div>
           <button type="button" className="mobile-close icon-btn" aria-label="Close menu" onClick={onClose}><Icon name="close" /></button>
         </div>
-        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.7</span></div>
+        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.8</span></div>
         <div className="nav-label">PROJECT</div>
         <nav aria-label="Project navigation" className="nav-list">
           <a href="#workspace" className="nav-item nav-active" onClick={onClose}><Icon name="cube" /> 3D Workspace <span className="nav-highlight" /></a>
@@ -58,9 +61,9 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
         </div>
         <div className="sidebar-bottom">
           <div className="side-progress">
-            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>07 <em>/ 08</em></strong></div>
-            <div className="progress-track"><span style={{ width: `${700 / STAGE_TOTAL}%` }} /></div>
-            <p>Engineering dashboard &amp; diagnostics</p>
+            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>08 <em>/ 08</em></strong></div>
+            <div className="progress-track"><span style={{ width: `${800 / STAGE_TOTAL}%` }} /></div>
+            <p>Integrated simulator &amp; portfolio release</p>
           </div>
           <div className="side-signature"><span className="signature-mark">◈</span><span>Designed to build real understanding.<br /><strong>One stage at a time.</strong></span></div>
         </div>
@@ -176,7 +179,7 @@ export default function App() {
   const [settings, dispatch] = useReducer(sceneReducer, INITIAL_SCENE);
   const [robotPose, robotDispatch] = useReducer(robotReducer, HOME_POSE);
   // Only event codes and non-biometric descriptive labels are recorded in memory.
-  const [diagnostics,setDiagnostics]=useState(()=>recordEvent(emptyDiagnostics(),'SESSION_STARTED','Stage 7 simulator session',Date.now()));
+  const [diagnostics,setDiagnostics]=useState(()=>recordEvent(emptyDiagnostics(),'SESSION_STARTED','Stage 8 simulator session',Date.now()));
   function logDiagnostic(code:DiagnosticCode,detail:string,durationMs?:number){
     setDiagnostics(state=>recordEvent(state,code,detail,Date.now(),durationMs));
   }
@@ -390,13 +393,13 @@ export default function App() {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <main className="main" id="workspace">
         <header className="topbar">
-          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 07</span></div>
-          <div className="topbar-right"><span className="dot-status" /><span>DIAGNOSTICS ONLINE</span><span className="version-pill">v0.7.0</span></div>
+          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 08</span></div>
+          <div className="topbar-right"><span className="dot-status" /><span>FINAL BUILD · SIMULATION ONLY</span><span className="version-pill">v0.8.0</span></div>
         </header>
 
         <div className="page-content">
           <section className="intro" id="overview">
-            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 007</span></div>
+            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 008</span></div>
             <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, manipulate virtual samples between elevated stations, and optionally use a calibrated live webcam to control the simulated arm behind deliberate safety interlocks.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
           </section>
 
@@ -407,9 +410,9 @@ export default function App() {
                 <div className="viewport-top"><div className="viewport-title"><span className="live-ring" /> LIVE 3D VIEWPORT <span className="viewport-divider">/</span> <span className="view-soft">ARTICULATED ARM</span></div><div className="viewport-top-right"><span>WEBGL</span><span className="mini-separator">·</span><span>{sceneReady ? 'RENDERER READY' : 'INITIALIZING'}</span></div></div>
                 <div className="scene-window">
                   <SceneErrorBoundary>
-                    <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} frozen={gestureControl.mode==='estop'} focusRobot={focusRobot} onReady={() => setSceneReady(true)} />
+                    <Suspense fallback={<div className="scene-loading" role="status">Loading interactive 3D renderer…</div>}><StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} frozen={gestureControl.mode==='estop'} focusRobot={focusRobot} onReady={() => setSceneReady(true)} /></Suspense>
                   </SceneErrorBoundary>
-                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-07</span><span>6 joints · Position IK · Procedural model</span></div>
+                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-08</span><span>6 joints · Position IK · Procedural model</span></div>
                   <div className="scene-corner scene-bottom-left"><span className="scene-led" /> <span>{settings.animateBeacon ? 'BEACON ACTIVE' : 'BEACON PAUSED'}</span></div>
                   <div className="scene-corner scene-bottom-right"><span>DRAG TO ROTATE</span><span className="zoom-help">SCROLL TO ZOOM</span></div>
                 </div>
@@ -417,7 +420,7 @@ export default function App() {
                   <div className="toolbar-group">
                     <button className={`tool-button ${settings.showGrid ? 'tool-active' : ''}`} type="button" aria-pressed={settings.showGrid} onClick={() => dispatch({ type: 'TOGGLE_GRID' })} title="Toggle reference grid"><Icon name="grid" size={16} /> Grid</button>
                     <button className={`tool-button ${settings.showAxes ? 'tool-active' : ''}`} type="button" aria-pressed={settings.showAxes} onClick={() => dispatch({ type: 'TOGGLE_AXES' })} title="Toggle coordinate axes"><Icon name="axis" size={16} /> Axes</button>
-                    <button type="button" className={`tool-button ${focusRobot ? 'tool-active' : ''}`} aria-pressed={focusRobot} onClick={()=>setFocusRobot(v=>!v)} title="Toggle robot-focused camera framing">{focusRobot?'Focus arm':'Wide scene'}</button>
+                    <button type="button" className={`tool-button ${focusRobot ? 'tool-active' : ''}`} aria-pressed={focusRobot} onClick={()=>setFocusRobot(v=>!v)} title={focusRobot ? "Switch to wide scene" : "Focus camera on robotic arm"} aria-label={focusRobot ? "Switch to wide scene" : "Focus camera on robotic arm"}>{focusRobot?'Focus arm':'Wide scene'}</button>
                     <span className="tool-divider" />
                     <button className="tool-button" type="button" aria-pressed={settings.animateBeacon} onClick={() => dispatch({ type: 'TOGGLE_MOTION' })}><Icon name={settings.animateBeacon ? 'pause' : 'play'} size={16} /> {settings.animateBeacon ? 'Pause beacon' : 'Play beacon'}</button>
                   </div>
@@ -436,9 +439,9 @@ export default function App() {
                   <span className="control-label">SCENE INFORMATION</span>
                   <dl className="property-list"><div><dt>Coordinate system</dt><dd>Right-handed</dd></div><div><dt>Up axis</dt><dd>+Y</dd></div><div><dt>Workspace size</dt><dd>{WORKSPACE.width} × {WORKSPACE.depth} m</dd></div><div><dt>Grid divisions</dt><dd>{WORKSPACE.gridDivisions}</dd></div><div><dt>Camera</dt><dd>{CAMERA_LABELS[settings.camera]}</dd></div><div><dt>Manual channels</dt><dd>6</dd></div></dl>
                   <div className="inspector-rule" />
-                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 7 · Engineering diagnostics</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Live webcam gestures can operate only the simulated robot after explicit arming.</p></div></div>
+                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 8 · Integrated digital-twin demonstration</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Live webcam gestures can operate only the simulated robot after explicit arming.</p></div></div>
                 </div>
-                <div className="inspector-footer"><span className="footer-led"/>STAGE 07 / 08 <span className="footer-right">DIAGNOSTICS</span></div>
+                <div className="inspector-footer"><span className="footer-led"/>STAGE 08 / 08 <span className="footer-right">DIAGNOSTICS</span></div>
               </aside>
             </div>
           </section>
@@ -451,7 +454,7 @@ export default function App() {
             onLoadPickup={loadPickup} onLoadDock={loadDock} onGrasp={graspSelected} onRelease={releaseSelected}
             onReset={resetObjects} message={manipulationMessage}/>
 
-          <GestureLab onFrame={onGestureFrame} onUnavailable={onGestureUnavailable} />
+          <Suspense fallback={<div className="gesture-loading" role="status">Loading opt-in gesture laboratory…</div>}><GestureLab onFrame={onGestureFrame} onUnavailable={onGestureUnavailable} /></Suspense>
           <GestureControlPanel mode={gestureControl.mode} reason={gestureControl.reason} ready={liveEligible} held={!!manipulation.heldId}
             onArm={armLiveGesture} onDisable={()=>updateGestureControl(disableGestureControl(gestureRef.current))}
             onEmergency={eStop} onReset={()=>updateGestureControl(resetEmergencyStop(gestureRef.current))} />
@@ -463,7 +466,7 @@ export default function App() {
             onClear={()=>setDiagnostics(emptyDiagnostics())}/>
 
           <section className="metrics-section" aria-label="Project engineering indicators">
-            <Stat label="DEVELOPMENT STAGE" value="07 / 08" sub="Engineering diagnostics" />
+            <Stat label="DEVELOPMENT STAGE" value="08 / 08" sub="Engineering diagnostics" />
             <Stat label="SCENE RENDERER" value="Three.js" sub="WebGL · React Three Fiber" />
             <Stat label="REFERENCE AXES" value="X · Y · Z" sub="Right-handed coordinate system" />
             <Stat label="ROBOT CONTROL" value="TELEOP + QA" sub="Session-local diagnostics" />
@@ -473,16 +476,16 @@ export default function App() {
             <div className="section-line roadmap-line"><div><span className="section-number">03</span><h2>The build roadmap</h2></div><span className="section-aside">8 DEVELOPMENT STAGES</span></div>
             <div className="roadmap-list">
               {DEVELOPMENT_STAGES.map((stage, index) => (
-                <div className={`roadmap-item ${index === 6 ? 'roadmap-current' : ''}`} key={stage}>
+                <div className={`roadmap-item ${index === 7 ? 'roadmap-current' : ''}`} key={stage}>
                   <span className="roadmap-index">{String(index + 1).padStart(2, '0')}</span>
                   <span className="roadmap-title">{stage}</span>
-                  <span className={`roadmap-status ${index === 6 ? 'current-status' : ''}`}>{index < 6 ? 'COMPLETE' : index === 6 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
-                  <span className="roadmap-indicator">{index <= 6 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
+                  <span className={`roadmap-status ${index === 7 ? 'current-status' : ''}`}>{index < 7 ? 'COMPLETE' : index === 7 ? 'RELEASE CANDIDATE' : 'UPCOMING'}</span>
+                  <span className="roadmap-indicator">{index <= 7 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
                 </div>
               ))}
             </div>
           </section>
-          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 7 · Session-local telemetry · Simulation only</span></footer>
+          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 8 · Verified-source digital twin · Simulation only</span></footer>
         </div>
       </main>
     </div>

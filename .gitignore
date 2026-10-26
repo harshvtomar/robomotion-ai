@@ -9,3 +9,6 @@ coverage/
 *.tsbuildinfo
 .vite/
 *.log
+
+# Reproducible local measurement artifacts (produced by npm run report:bundle)
+reports/

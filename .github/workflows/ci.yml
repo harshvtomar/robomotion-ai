@@ -1,20 +1,40 @@
-name: RoboMotion Stage 4 CI
+name: RoboMotion AI — Tests and Build
 on:
   push:
   pull_request:
-
+  workflow_dispatch:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # No package-lock.json until an authenticated npm install succeeds.
-      # Generate and commit package-lock.json from a successful trusted Mac npm install,
-      # then switch this install step to npm ci for reproducible builds.
-      - run: npm install --no-audit --no-fund
-      - run: npm test
-      - run: npm run typecheck
-      - run: npm run build
+      - name: Install dependencies (locked when available)
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+      - name: Run automated regression
+        run: npm test
+      - name: Check TypeScript
+        run: npm run typecheck
+      - name: Build production
+        run: npm run build
+      - name: Release safety audit
+        run: npm run audit:release
+      - name: Measure build chunks
+        run: npm run report:bundle
+      - name: Archive build evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: robomotion-build-evidence
+          path: |
+            reports/bundle-report.json
+            dist/
+          retention-days: 14

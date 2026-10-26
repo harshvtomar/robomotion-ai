@@ -348,3 +348,11 @@ h1 em { color: var(--orange); font-style: normal; }
 @media(max-width:1250px){.diagnostic-summary {grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:800px){.diagnostic-columns {grid-template-columns:1fr}.diagnostics-heading {align-items:flex-start;flex-direction:column}}
 @media(max-width:540px){.diagnostic-summary {grid-template-columns:1fr}.diagnostic-summary strong {font-size:17px}.diagnostics-heading,.diagnostic-card {padding:16px}.event-panel {margin:0 10px 10px}.diagnostic-columns {padding:0 10px 10px}.diagnostic-summary {padding:10px}.event-table th,.event-table td {padding:8px;font-size:10px}}
+
+/* Stage 8 release: fallback states and keyboard/reduced-motion polish. */
+.scene-loading,.gesture-loading{display:grid;place-items:center;min-height:260px;background:#0e2233;color:#bad9e6;text-align:center;font-size:13px;padding:24px}
+.scene-loading{min-height:420px}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #90ecdd;outline-offset:3px}
+.event-scroll:focus-visible{outline:3px solid #90ecdd;outline-offset:2px}
+@media(prefers-reduced-motion:reduce){.gesture-progress span,.progress-track span,.live-ring,.tiny-dot,.intro-orbit *{transition:none!important;animation:none!important}}
+@media(max-width:550px){.scene-loading{min-height:300px}.gesture-loading{min-height:220px}}

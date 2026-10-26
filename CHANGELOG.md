@@ -70,3 +70,13 @@
 - Added reversible Focus arm / Wide scene camera framing and responsive engineering diagnostics panel.
 - Preserved all Stage 1–6 functions, prior regression tests and safety controls.
 - Added 38 Stage 7 tests; no Stage 8 work started.
+
+## 0.8.0 — Final integration source release candidate (26 October 2026)
+
+- Preserved the Stage 7 diagnostics and Stage 6 safety-controlled gesture system.
+- Added React.lazy boundaries for the 3D scene and gesture lab plus accessible loading fallbacks; MediaPipe remains opt-in.
+- Added testable aspect-ratio-aware camera scale and target-height helpers.
+- Added source release audit and generated bundle report (available when `dist` exists).
+- Added GitHub CI and manually triggered Pages deployment workflow with dynamic repository base path.
+- Added 19-case live browser QA checklist, portfolio case study, demo guide, privacy limitations, resume bullets and deployment instructions.
+- Full npm production build, WebGL UI/gesture validation, public deployment and real performance benchmarking require independent Mac/hosted evidence.

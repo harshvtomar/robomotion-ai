@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // '/' locally; CI sets '/<repository>/' for GitHub Pages project sites.
+  base: process.env.VITE_BASE_PATH || '/',
   build: { outDir: 'dist', sourcemap: false },
   server: { open: false, host: '127.0.0.1', port: 5173, strictPort: false },
   preview: { host: '127.0.0.1' },

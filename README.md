@@ -1,63 +1,64 @@
-# RoboMotion AI — Stage 7 · Engineering Dashboard & Diagnostics
+# RoboMotion AI · Engineering Digital Twin
 
-**Version:** 0.7.0 | **Stages implemented:** 1–7 of 8 | **Type:** simulated robotics demonstrator (no physical hardware)
+**v0.8.0 — final source release candidate | 8 development stages implemented | simulation only**
 
-A browser-based digital twin of a six-channel robotic arm. It combines manual joint control, forward and inverse kinematics, simulated pick-and-place of three samples, MediaPipe live webcam recognition, explicit simulation-only gesture teleoperation, and an in-memory engineering dashboard.
+RoboMotion AI is a browser-based articulated robotic-arm demonstrator. It combines 3D manual control, forward/inverse kinematics, virtual pick-and-place, opt-in webcam landmarks, bounded gesture-driven motion, and session-local engineering diagnostics. **It is not a physical robot, a safety-certified device, or an error-free commercial product.**
 
-## Launch on macOS
+## Run on your Mac
 
-Requirements: Node.js 22.12+, Chrome with WebGL enabled, macOS webcam access for optional live recognition, internet access on first installation for npm and the MediaPipe model.
+Requirements: macOS, Node 22.12+, an up-to-date Chrome/Safari browser with WebGL, internet for npm and first MediaPipe model/WASM download, optional webcam permission for live controls.
 
 ```bash
 cd ~/Downloads
-unzip RoboMotion_AI_Stage7_Engineering_Diagnostics.zip
-cd robomotion-ai-stage7
+unzip RoboMotion_AI_Stage8_Final_Release.zip
+cd robomotion-ai-stage8
 npm install
 npm test
 npm run typecheck
 npm run build
+npm run audit:release
+npm run report:bundle
 npm run dev
 ```
 
-Open the **exact** address printed by Vite. If several older Stage servers are running it may not be port 5173.
+Open the **exact** `http://127.0.0.1:PORT/` shown in the Vite output. Existing Stage 1–7 servers can occupy earlier ports. Stop the dev server with Ctrl+C.
 
-## Main sections
+## Explore the app
 
-1. **3D Workspace:** articulated arm, grid/axes, camera presets, reversible `Focus arm / Wide scene` framing, reset, orbit and zoom.
-2. **Joint Controls:** six bounded sliders, home/upright/inspect/folded presets, manual override.
-3. **Target Kinematics:** position-only FK/IK, reachability constraints, planned motion and stop.
-4. **Object Manipulation:** three virtual samples, elevated pickup and docking stations, grasp/release and approximate sampled clearance checking.
-5. **Hand Gesture Lab:** opt-in webcam, 21 MediaPipe landmarks, five gestures, calibration and deterministic synthetic test bench.
-6. **Gesture Robot Control:** explicitly armed live-camera motion only, automatic disarm on tracking failure, manual override and latched E-stop. Synthetic fixtures cannot drive the robot.
-7. **Engineering Diagnostics:** commanded TCP coordinates, target error, motion and safety counts, live gesture status, docking state, action history, privacy-safe CSV/JSON export, clear, and a manually checked five-step demo.
+| Section | What it demonstrates |
+|---|---|
+| 3D Workspace | Procedural six-channel robotic arm, orbit/zoom, grid and axis helpers, camera presets, responsive Focus arm / Wide scene views |
+| Joint Controls | Bounded base, shoulder, elbow, wrist pitch/roll and gripper sliders; four pose presets |
+| Target Kinematics | Calculated FK/IK, reachability rejection, bounded interpolation and target visualization |
+| Object Manipulation | Three samples and three elevated station pairs; proximity grasping, dock occupancy and sampled clearance |
+| Hand Gesture Lab | Explicit webcam start, 21-point landmarks, classification, calibration, synthetic fixtures for deterministic testing |
+| Gesture Robot Control | Opt-in *simulation-only* gesture drive, calibration, hand-loss disarm, manual override, emergency-stop latch |
+| Engineering Diagnostics | Live simulated metrics, session event log, safety counters, manual demo checklist, explicit CSV/JSON downloads |
 
-## Stage 7 diagnostics details
+**Synthetic fixtures cannot command the robotic arm.** Actual webcam gesture-to-robot control requires live calibration and deliberate user arming. A reset emergency stop does not automatically rearm control.
 
-- **No camera frames, images, raw landmarks, personal identifying data or saved recordings** enter the engineering event log. It receives only whitelisted event codes, curated short descriptions and optional movement durations.
-- History is **session-only** and capped at 240 events. Reloading the page clears it. Pressing **Clear events** clears it immediately. Downloads require a user click and stay on the local machine unless the user shares them.
-- Displayed confidence is the current gesture-geometry score, **not a measured classifier accuracy**. FK and target error are commanded digital-twin values, not physical encoder measurements.
-- Events count controller and simulation actions only; they do not claim to measure actual actuator torque, sensor accuracy or production reliability.
-- The five-step guide is a checklist. It **never starts the webcam or moves/arms the robot automatically**.
+## Verification
 
-## Tests
+- The inherited Stage 7 source baseline passed **241/241** automated Node tests in the development environment.
+- New Stage 8 tests and release audits are included; results from the actually executed checks are documented in `STAGE_8_COMPLETION_REPORT.md`.
+- The previous Stage 7 project passed a Mac TypeScript/production build and displayed a working diagnostics dashboard in user screenshots. That is **not** a Stage 8 Mac build confirmation.
+- Stage 8 device-dependent checks — actual webcam tracking, 3D renderer, focus framing, CSV/JSON download behavior, responsiveness, live movement and hosted deployment — remain pending until explicitly tested.
 
-```bash
-npm test
-npm run typecheck:core
-npm run typecheck
-npm run build
-```
+Run `npm run verify` locally after successful dependency installation. `npm run report:bundle` writes `reports/bundle-report.json` only after a successful build, showing actual JS asset bytes. Smaller chunks alone do not prove better runtime speed.
 
-The existing 203 Stage 1–6 tests remain; 38 new Stage 7 tests are included. The `npm test` command uses Node 22 TypeScript stripping. Full React/Vite build and interactive browser verification **must be run on your Mac** if dependencies cannot be installed in another environment.
+## Privacy, limitations and provenance
 
-## Limits and honesty
+The app does not deliberately record or upload webcam frames. MediaPipe model and WASM assets load from third-party servers on first use and may have independent diagnostics; see `docs/PRIVACY_AND_LIMITATIONS.md`. Diagnostic exports contain whitelisted simulator events and timestamps, not images/hand landmarks. IK target error is based on **commanded pose**, not physical measurement. Collision checks are partial; the gripper is a discrete virtual state, not force physics.
 
-- This is a digital simulation. No serial/Bluetooth/hardware connectivity or physical emergency-stop certification exists.
-- IK keeps the gripper upright and controls position, not arbitrary six-axis tool orientation.
-- Sample handling is discrete, with approximate collision checks; not full multibody dynamics, grip force, robot self-collision or gravity-based release.
-- Gesture telemetry does not establish gesture-accuracy statistics. The video remains local to Chrome; initial MediaPipe models/wasm are fetched externally as described in the Hand Gesture Lab.
-- Stage 8 comprehensive release QA, public deployment, performance budgets and portfolio materials are **not started**.
+The complete Stage 1–7 history is included in the ZIP. The source was extended in Stage 8 rather than rebuilt. No hosted live URL, CI success, real-world hand tracking accuracy or physical hardware demonstration is claimed.
 
-## Handoff
+## Portfolio, deployment and release evidence
 
-See `PROJECT_STATE.md`, `STAGE_7_COMPLETION_REPORT.md`, `docs/QA.md` and `NEXT_STAGE.md`. Each subsequent stage must inspect this actual source before changing anything; **never recreate completed stages**.
+- `docs/PORTFOLIO_CASE_STUDY.md` — engineering motivation, architecture, evidence and limitations.
+- `docs/DEMO_SCRIPT.md` — authentic 60–90-second recruiter demonstration.
+- `docs/RESUME_BULLETS.md` — factual bullets, conditionally usable after Mac QA.
+- `docs/RELEASE_QA_CHECKLIST.md` — 19 explicit Mac/live browser cases and pass criteria.
+- `docs/DEPLOYMENT.md` — GitHub setup and **manual** GitHub Pages workflow.
+- `STAGE_8_COMPLETION_REPORT.md`, `PROJECT_STATE.md`, `NEXT_STAGE.md` — source verification and remaining acceptance.
+
+**Designed for learning and demonstration:** Masters' Union Builders Engineering internship is hands-on; combine this simulation with truthful evidence of physical mechanical prototyping if available.

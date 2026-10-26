@@ -47,8 +47,8 @@ test('72: 3D scene preserves Stage 1 calibration base and toggles', () => {
 test('73: all Stage 2 handoff documents present', () => {
   for(const f of ['README.md','PROJECT_STATE.md','NEXT_STAGE.md','STAGE_2_COMPLETION_REPORT.md','docs/ARCHITECTURE.md','docs/QA.md']) assert.ok(present(f),f);
 });
-test('74: project version advances through Stage 7 while retaining existing dependencies', () => {
+test('74: project version advances through Stage 8 while retaining existing dependencies', () => {
   const p=JSON.parse(read('package.json'));
-  assert.equal(p.version,'0.7.0');
+  assert.equal(p.version,'0.8.0');
   for (const d of ['react','three','@react-three/fiber','@react-three/drei']) assert.ok(p.dependencies[d]);
 });
