@@ -1,8 +1,12 @@
 # RoboMotion AI · Engineering Digital Twin
 
-**v0.8.0 — final source release candidate | 8 development stages implemented | simulation only**
+**v0.8.0 | 8 development stages implemented | simulation only**
 
 RoboMotion AI is a browser-based articulated robotic-arm demonstrator. It combines 3D manual control, forward/inverse kinematics, virtual pick-and-place, opt-in webcam landmarks, bounded gesture-driven motion, and session-local engineering diagnostics. **It is not a physical robot, a safety-certified device, or an error-free commercial product.**
+
+[Open the public demo](https://harshvtomar.github.io/robomotion-ai/) · [Engineering case study](docs/PORTFOLIO_CASE_STUDY.md) · [Publication QA](docs/PUBLICATION_QA.md)
+
+![RoboMotion public application in connected Chrome](docs/screenshots/workspace.jpg)
 
 ## Install and run
 

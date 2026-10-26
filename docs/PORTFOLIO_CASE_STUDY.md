@@ -31,3 +31,11 @@ The project demonstrates robotics mathematics, a realistic iterative build/debug
 ## Known limitations and next engineering experiments
 
 The geometric arm is not a calibrated mechanical CAD assembly. IK targets position only, with restricted tool orientation. Collision checks sample tool/object paths but not every link, and grasping is state-based rather than force-closed. Gesture accuracy varies with lighting, occlusion and model inputs, and there is no independently measured gesture confusion matrix. Next appropriate work includes formal visual regression, authentic browser acceptance and measured performance, before discussing any real robot hardware.
+
+## Published demonstration
+
+[Public HTTPS application](https://harshvtomar.github.io/robomotion-ai/) · [GitHub source](https://github.com/harshvtomar/robomotion-ai)
+
+The public application rendered its 3D arm in connected Chrome. Manual controls, reachable/invalid IK, Sample A to Dock C transfer, synthetic gesture gating and emergency-stop/reset were exercised. Cloud WebGL is unavailable; cloud camera-start correctly reported no camera. See the QA report for exact evidence and limitations.
+
+![Actual public application](screenshots/workspace.jpg)
