@@ -5,6 +5,7 @@ import type { Group } from 'three';
 import { CAMERA_PRESETS, WORKSPACE } from '../core/stage1';
 import type { CameraPreset, SceneSettings } from '../core/stage1';
 import type { RobotPose } from '../core/robot';
+import type { Vector3 } from '../core/kinematics';
 import { RobotArm } from './RobotArm';
 
 function CameraRig({ preset, resetVersion }: { preset: CameraPreset; resetVersion: number }) {
@@ -75,7 +76,7 @@ function OriginPlinth({ running }: { running: boolean }) {
   );
 }
 
-function StarterWorld({ settings, resetVersion, pose }: { settings: SceneSettings; resetVersion: number; pose: RobotPose }) {
+function StarterWorld({ settings, resetVersion, pose, target }: { settings: SceneSettings; resetVersion: number; pose: RobotPose; target: Vector3 | null }) {
   return (
     <>
       <color attach="background" args={['#0b1727']} />
@@ -94,16 +95,24 @@ function StarterWorld({ settings, resetVersion, pose }: { settings: SceneSetting
       {settings.showAxes && <axesHelper args={[2.15]} position={[-2.3, 0.01, 2.2]} />}
       <OriginPlinth running={settings.animateBeacon} />
       <RobotArm pose={pose} />
+      {target && Math.hypot(target.x, target.z) <= 4.5 && target.y >= 0 && target.y <= 4.5 && (
+        <group position={[target.x, target.y, target.z]} name="stage-3-target-marker">
+          <mesh><sphereGeometry args={[0.095, 24, 16]} /><meshStandardMaterial color="#77e4d5" emissive="#1b9e92" emissiveIntensity={0.75} transparent opacity={0.85} /></mesh>
+          <mesh rotation={[Math.PI/2,0,0]}><torusGeometry args={[0.18,0.012,8,36]} /><meshBasicMaterial color="#6ff8e3" /></mesh>
+          <axesHelper args={[0.32]} />
+        </group>
+      )}
       <CameraRig preset={settings.camera} resetVersion={resetVersion} />
     </>
   );
 }
 
-export function StarterScene({ settings, resetVersion, onReady, pose }: {
+export function StarterScene({ settings, resetVersion, onReady, pose, target }: {
   settings: SceneSettings;
   resetVersion: number;
   onReady: () => void;
   pose: RobotPose;
+  target: Vector3 | null;
 }) {
   return (
     <Canvas
@@ -115,7 +124,7 @@ export function StarterScene({ settings, resetVersion, onReady, pose }: {
       onCreated={onReady}
       fallback={<div className="canvas-fallback" role="alert">3D rendering requires WebGL. Try Chrome or Safari with hardware acceleration enabled.</div>}
     >
-      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} />
+      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} target={target} />
     </Canvas>
   );
 }

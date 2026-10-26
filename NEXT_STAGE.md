@@ -1,26 +1,25 @@
-# Next Stage — RoboMotion AI Stage 3 (Not Implemented)
+# Next Stage — Stage 4: Virtual Object Manipulation (NOT STARTED)
 
-**Handoff from:** Stage 2, v0.2.0, fully packaged.
+**Source handoff:** RoboMotion AI v0.3.0, complete Stage 3 project. Stage 1 foundation and Stage 2 manual articulations preserved.
 
-## Required starting checks
+## Required preflight
 
-1. Unzip the attached full Stage 2 archive. Inspect actual `src/core/stage1.ts`, `src/core/robot.ts`, `src/components/RobotArm.tsx`, `src/components/StarterScene.tsx`, `src/App.tsx`, existing tests, and documents.
-2. Preserve Stage 1 scene tools, Stage 2 manual controls, limits, preset poses, view reset, visual styling and test coverage.
-3. Run `npm test`, `npm run typecheck`, `npm run build`; do not claim pass unless the commands pass in your environment.
-4. Keep baseline and new test results separate, and preserve an original source backup.
+- Confirm Stage 3 package is successfully extracted, and `npm test`, `npm run typecheck`, `npm run build` pass **on Mac** with installed npm packages.
+- Validate in Chrome the Stage 2 manual joints/presets and Stage 3 FK/IK console, target marker, reachability rejection, movement and Stop; preserve screenshots/logs.
+- Inspect entire existing repository, architecture, tests, and Stage 3 joint-space model. Do not rebuild any previous stage or change kinematic conventions casually.
 
-## Stage 3 scope (only if user explicitly starts Stage 3)
+## Future Stage 4 scope only (once explicitly requested)
 
-- Define deterministic link geometry and parent-local transforms for mathematical **forward kinematics**.
-- Implement a bounded, mathematically validated **inverse-kinematics** method for reachable targets. Handle singularities, unreachable targets and safe limits.
-- Add goal coordinates / end-effector position readouts; choose clear coordinate conventions matching Stage 2 hierarchy.
-- Add motion interpolation/planning for commanded targets without overwriting manual controls or breaking pose presets.
-- Create meaningful accuracy, convergence, and unreachable-target tests.
-- Add UI for selecting reachable targets and showing informative error states.
-- Update documentation and create full updated source ZIP.
+- Place target objects in the 3D workspace with defined mass/size and placement bins (or other simple target platforms).
+- Add gripper attachment/release rules, bounded collision proxies, clear contact-state reporting, and explicit distinctions between scripted grasp logic and physics-based dynamics.
+- Introduce collision testing/constraints appropriate to the model, with deterministic test coverage and reproducible pick-and-place demo.
+- Preserve Stage 1 controls, Stage 2 six-joint manual mode, Stage 3 measured *command* FK, upright-only constrained target IK and cancellation behavior.
+- Extend automated tests and test actual WebGL interactions on Mac; update full source ZIP and handoff.
 
-**Do not accidentally start Stages 4–8.** No real physical pickup, collider dynamics, MediaPipe, webcam capture, or real motors in Stage 3 unless user changes scope.
+## Must not do yet
 
-## Suggested ChatGPT prompt
+No Stage 4 code was implemented during Stage 3. Do not claim physical grasping, obstacle avoidance, 6-DOF arbitrary orientation IK, robot hardware, MediaPipe, webcam or gesture operation. These are either later stages or separate engineering work.
 
-> Start RoboMotion AI Stage 3 — Robotics Mathematics & Motion Control. Inspect the attached full Stage 2 ZIP and continue in place. Preserve every Stage 1 and Stage 2 feature. Implement tested forward and inverse kinematics and bounded target control. Do not begin Stage 4. Run tests, package a full ZIP and update README, PROJECT_STATE.md and NEXT_STAGE.md. Distinguish verified functionality from pending Mac browser checks.
+## Suggested next-chat instruction
+
+> Start RoboMotion AI Stage 4 — Virtual Object Manipulation. Continue from the attached verified Stage 3 ZIP and preserve Stage 1–3. Add interactive objects, simulated gripper attachment/release, workspace targets and deterministic collision checks. Implement and test completely within the available environment; deliver an updated full ZIP with README, PROJECT_STATE, NEXT_STAGE and completion report. Do not start Stage 5.

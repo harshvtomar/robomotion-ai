@@ -35,9 +35,10 @@ test('70: per-frame updates use dt-aware smooth interpolation', () => {
   assert.match(src, /useFrame\(\(_, delta\)/);
   assert.match(src, /easeJoint\(current\.current\[key\], pose\[key\], delta\)/);
 });
-test('71: stage3 functionality not falsely advertised', () => {
-  assert.match(read('src/App.tsx'), /No inverse kinematics, autonomous movement/);
-  assert.doesNotMatch(read('src/core/robot.ts'), /solveIK|inverseKinematics|MediaPipe/);
+test('71: Stage 3 implements IK separately without advancing to physical manipulation', () => {
+  assert.match(read('src/App.tsx'), /Target kinematics console/);
+  assert.match(read('src/App.tsx'), /No obstacle avoidance, guaranteed collision-free path, or object grasping/);
+  assert.doesNotMatch(read('src/core/robot.ts'), /MediaPipe/);
 });
 test('72: 3D scene preserves Stage 1 calibration base and toggles', () => {
   const src=read('src/components/StarterScene.tsx');
@@ -48,6 +49,6 @@ test('73: all Stage 2 handoff documents present', () => {
 });
 test('74: project version advanced while retaining all existing dependencies', () => {
   const p=JSON.parse(read('package.json'));
-  assert.equal(p.version,'0.2.0');
+  assert.equal(p.version,'0.3.0');
   for (const d of ['react','three','@react-three/fiber','@react-three/drei']) assert.ok(p.dependencies[d]);
 });

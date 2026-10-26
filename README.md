@@ -1,15 +1,17 @@
-# RoboMotion AI — Stage 2: Articulated 3D Robot (v0.2.0)
+# RoboMotion AI — Stage 3: Kinematics & Motion Control (v0.3.0)
 
-An interactive **manual-control robotic arm digital twin prototype** built with React 19, TypeScript, Three.js, React Three Fiber and Vite. The procedural 3D arm, six joint channels and Stage 1 calibration workspace run completely in the browser—no hardware, webcam or server required.
+An interactive **software robotic-arm prototype** built with React 19, TypeScript, Three.js/React Three Fiber and Vite. Stage 1's 3D calibration scene and Stage 2's six-joint manual arm are preserved. Stage 3 adds **forward kinematics**, **bounded analytic position-only inverse kinematics**, **reachable-target feedback**, a target marker and **coordinated finite-duration joint commands**.
 
-> Scope: This is a **kinematic hierarchy visualization driven by manual joint angles**, not a physical robot, inverse-kinematics solver, grasp simulator or gesture-recognition system. Those features are planned for later stages.
+> **Honest scope:** This is an in-browser engineering simulation, not a connected physical digital twin. Commands are not sensor readings. No collision avoidance, physically certified accuracy, webcam recognition, actual object grip or motors are implemented.
 
-## Getting started on Mac
+## Open on Mac
 
-Prerequisites: Node.js 22.12+ and internet for the first npm installation.
+Requires Node.js >=22.12 and working npm access on the first installation.
 
 ```bash
-cd ~/Downloads/robomotion-ai-stage2
+cd ~/Downloads
+unzip RoboMotion_AI_Stage3_Kinematics_Motion.zip
+cd robomotion-ai-stage3
 npm install
 npm test
 npm run typecheck
@@ -17,55 +19,53 @@ npm run build
 npm run dev
 ```
 
-Open the local URL printed by Vite, typically `http://127.0.0.1:5173`.
+Open the **exact Vite URL** printed by `npm run dev`, usually `http://127.0.0.1:5173`. If Stage 1/2 already occupies 5173, Vite may select 5174/5175. Do not overwrite the existing Stage 2 directory; Stage 3 is a complete stand-alone source snapshot.
 
-**When upgrading from Stage 1:** Extract Stage 2 into its own folder. The ZIP contains the full Stage 1 foundation plus Stage 2 files. Avoid overlaying a running Stage 1 folder. If port 5173 is occupied, stop the Stage 1 dev server with Ctrl+C before starting Stage 2. No local installation of robotic hardware or SDKs is required.
+## Interactions
 
-## Controls
+1. **Manual robot control (retained):** Six bounded sliders for base yaw, shoulder, elbow, wrist pitch, wrist roll and gripper opening; keyboard slider support, small +/- adjustments, Home/Upright/Inspect/Folded presets and Reset pose.
+2. **Scene tools (retained):** Orbit, zoom, preset cameras, grid/axes toggles, calibration beacon pause and independent Reset view.
+3. **Target coordinates (new):** Scroll to the **Target kinematics console** and enter X, Y, Z in world metres, with Y up. The cyan marker shows the entered position when within the visual range. Shortcuts fill the Home TCP, Current TCP or an attainable Demo point.
+4. **Inverse solution (new):** The console checks finite inputs, workspace and analytic two-link geometry, shoulder/elbow/base/wrist-pitch angle limits and final FK error. It chooses the nearest bounded upright-gripper solution. It reports a reason rather than moving when impossible.
+5. **Move to target (new):** Starts a coordinated smoothstep joint-space plan within per-joint speed limits. The trajectory can be stopped, and interacting with manual sliders/presets or editing a target cancels an active plan. A green marker displays the requested point; FK readout shows the **commanded** tool location (not measured physical position). An additional per-frame visual smoothing layer may lag briefly after the command ends.
 
-1. **3D viewport:** Drag to rotate the orbit camera and scroll to zoom. Select **isometric/front/top** in the Scene Inspector. **Reset view** restores the camera and Stage 1 grid/axes/beacon settings without changing the robot pose.
-2. **Stage 1 controls:** Toggle **Grid**, **Axes** and **Pause beacon** (the reference beacon animation). Pausing the beacon does *not* pause manual robot commands.
-3. **Stage 2 joint console:** Six labelled sliders (base yaw, shoulder, elbow, wrist pitch, wrist roll and gripper opening), with keyboard-capable native `<input type="range">` controls and fine +/- buttons.
-4. **Quick poses:** Home, Upright, Inspect, Folded. **Reset pose** restores the home pose, independently of camera reset.
-5. **Safety in simulation:** Commands are clamped to defined numeric limits and non-finite/unknown inputs are rejected in the pure reducer. Limits are demonstrative, not certified for hardware.
+## Geometry convention and solver restrictions
 
-## Manual joint ranges
+- World is right-handed, +Y up; units are approximate visualization metres.
+- Shoulder pivot height from ground is **1.12 m**; upper/forearm are **1.16 m / 0.96 m**; upright gripper TCP extension from wrist-pitch pivot is **0.72 m**. TCP is at the mid-finger contact reference, not a physical sensor.
+- Shoulder/elbow/wrist pitch rotate around local Z; base yaws about +Y. Forward kinematics follows the actual hierarchical offsets defined by Stage 2's `RobotArm.tsx`.
+- Position IK uses 2-link planar geometry, checks both elbow branches and yaw choices, and fixes the **world-relative tool pitch to upright (0°)**. It preserves wrist roll and gripper opening. Therefore this does **not** solve arbitrary 6D pose/orientation IK, and many points inside the coarse reach sphere can still be rejected.
+- Explicit floor/ceiling and radial envelope checks come first; the solver then applies all joint bounds and validates the computed FK position within **15 mm** rounding tolerance. Invalid targets do not move the robot. No numerical runaway or silent clipping to a different position.
+- Motion duration is derived from per-joint maximum rates with smoothstep peak-velocity compensation. This is coordinated joint interpolation **without acceleration/torque/obstacle constraints**; planned intermediate poses are within per-joint angular limits, but trajectories are **not guaranteed collision-free**.
 
-| Joint | Command range | Mechanism |
-| --- | --- | --- |
-| Base | -170° to +170° | Yaw about vertical (+Y) |
-| Shoulder | -80° to +80° | Pitch around local Z |
-| Elbow | -135° to +135° | Relative pitch around local Z |
-| Wrist pitch | -100° to +100° | Relative pitch around local Z |
-| Wrist roll | -170° to +170° | Tool-head rotation around local Y |
-| Gripper | 0 to 100% | Symmetric movement of two fingers |
-
-The arm is a hierarchical **procedural stylized model** with base/shoulder/elbow/wrist pivots, link casings, accent panels, mechanical hinges, and parallel fingers. It is not a downloaded rigged model or an engineering-certified CAD model.
-
-## Verification
+## Testing
 
 ```bash
-npm test                 # dependency-free node test runner; original regressions + Stage 2 tests
-npm run typecheck:core   # pure TypeScript contracts
-npm run typecheck        # full React/Three.js check; requires npm install
-npm run build            # production bundle; requires npm install
-npm run verify           # test, typecheck and build
+npm test               # 114 Node automated tests (Stage 1–3), no npm modules needed
+npm run typecheck:core # core TypeScript check without third-party dependencies
+npm run typecheck      # full React/R3F check after npm install
+npm run build          # Vite production build after npm install
+npm run verify         # test + full typecheck + build
 ```
 
-See [`STAGE_2_COMPLETION_REPORT.md`](STAGE_2_COMPLETION_REPORT.md) for the results achieved in this chat/runtime and checks still pending on your Mac. Do not claim a successful live browser or WebGL verification without running it locally.
+**This conversation's evidence:** 114/114 automated tests and core TypeScript validation passed; updated TSX files passed syntax parsing. The runtime could not fetch npm packages, so the full React typecheck, production build and live browser motion are **not verified here**. Run the commands above on the Mac and attach console/screenshots before marking final browser acceptance. Earlier Stage 2 Mac production-build evidence does not verify newly added Stage 3 code.
 
-## Source map
+## File guide
 
-- `src/core/stage1.ts` — preserved Stage 1 scene settings and camera reducer
-- `src/core/robot.ts` — new pure Stage 2 joint limits, reducer, presets, smoothing
-- `src/components/StarterScene.tsx` — preserved Stage 1 Canvas with Stage 2 arm mounted
-- `src/components/RobotArm.tsx` — new articulated 3D model and animation
-- `src/App.tsx` — preserved dashboard with Stage 2 joint-console section
-- `tests/` — original tests, updated Stage 2 content assertion, additional robot tests
-- `PROJECT_STATE.md`, `NEXT_STAGE.md` — state and Stage 3 contract
+| Source | Purpose |
+|---|---|
+| `src/core/robot.ts` | Preserved manual joint limits/reducer; additive bounded SET_POSE command |
+| `src/core/kinematics.ts` | New mathematically explicit forward/analytic inverse kinematics |
+| `src/core/motion.ts` | New bounded coordinated smoothstep trajectory planning/sampling |
+| `src/components/RobotArm.tsx` | Preserved Stage 2 procedural geometry and visual interpolation |
+| `src/components/StarterScene.tsx` | Preserved scene with additive target marker |
+| `src/App.tsx` | Manual controls plus target console and animation/cancel orchestration |
+| `tests/stage3-kinematics.test.mjs` | FK/IK, negative, numerical and motion tests |
+| `PROJECT_STATE.md`, `NEXT_STAGE.md` | Exact checkpoint and Stage 4 constraints |
+| `docs/ARCHITECTURE.md`, `docs/QA.md` | Geometry and acceptance details |
 
-## Credits and portfolio honesty
+## Portfolio integrity
 
-Designed and implemented as a software simulation. Do not describe it as a built physical arm or claim real-world measurement, hardware control, autonomous pick-and-place or webcam functionality. Record a browser demonstration after verifying the UI on your own Mac.
+Describe this as a **gesture-control-ready robotic arm simulation with tested position kinematics**; webcam and gesture recognition are not yet present (Stages 5–6). Do not claim real-world engineering calibration, autonomous physical robotic manipulation or collision-tested robotic hardware. For the Masters' Union application, film a working browser demonstration on your own Mac after completing browser verification.
 
-MIT License. Existing Stage 1 source and test history preserved in included `.git` baseline (when present).
+MIT License; Stage 1/2 source and historical test suites retained.

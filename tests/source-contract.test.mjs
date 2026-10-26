@@ -35,8 +35,8 @@ test('24: application exposes core toggles and camera selector', () => {
   const source = read('src/App.tsx');
   for (const v of ['TOGGLE_GRID', 'TOGGLE_AXES', 'TOGGLE_MOTION', 'SET_CAMERA', 'RESET', 'camera-preset']) assert.ok(source.includes(v), `${v} missing`);
 });
-test('25: Stage 2 transparently distinguishes manual arm from later autonomy', () => {
-  assert.match(read('src/App.tsx'), /No inverse kinematics, autonomous movement/);
+test('25: Stage 3 preserves manual arm while clearly excluding collision physics', () => {
+  assert.match(read('src/App.tsx'), /collision avoidance and real hardware control are not implemented/);
   assert.match(read('src/components/StarterScene.tsx'), /<RobotArm pose={pose}/);
 });
 test('26: repository does not commit dependencies', () => {

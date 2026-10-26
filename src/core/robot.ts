@@ -1,4 +1,4 @@
-/** Stage 2 manual joint-space controls. No inverse kinematics or autonomy. */
+/** Bounded joint-space control shared by Stage 2 manual and Stage 3 target modes. */
 export const JOINT_KEYS = ['base', 'shoulder', 'elbow', 'wristPitch', 'wristRoll', 'gripper'] as const;
 export type JointKey = (typeof JOINT_KEYS)[number];
 
@@ -37,7 +37,8 @@ export type RobotAction =
   | { type: 'SET_JOINT'; joint: JointKey; value: number }
   | { type: 'NUDGE_JOINT'; joint: JointKey; direction: -1 | 1 }
   | { type: 'APPLY_PRESET'; preset: PosePreset }
-  | { type: 'RESET_POSE' };
+  | { type: 'RESET_POSE' }
+  | { type: 'SET_POSE'; pose: RobotPose };
 
 export function clampJoint(joint: JointKey, value: number): number {
   if (!Object.prototype.hasOwnProperty.call(JOINT_SPECS, joint)) throw new Error(`Unknown joint: ${joint}`);
@@ -63,6 +64,8 @@ export function robotReducer(pose: RobotPose, action: RobotAction): RobotPose {
     }
     case 'RESET_POSE':
       return { ...HOME_POSE };
+    case 'SET_POSE':
+      return Object.fromEntries(JOINT_KEYS.map((joint) => [joint, clampJoint(joint, action.pose[joint])])) as unknown as RobotPose;
     default:
       throw new Error(`Unknown robot action: ${JSON.stringify(action)}`);
   }
