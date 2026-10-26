@@ -35,3 +35,7 @@ Extract ZIP on a Mac connected to the internet and run `npm install`, `npm test`
 ## Next ChatGPT stage
 
 Attach this ZIP and follow `NEXT_STAGE.md` for **Stage 2 (Articulated 3D Robotic Arm)**. Preserve Stage 1 source and tests.
+
+## Stage 1 Mac typecheck correction (2026-10-26)
+
+The user successfully opened the development preview at `http://127.0.0.1:5173`. The subsequent full `tsc -b`/production-build check exposed unused `CAMERA_PRESETS` import (TS6133) in `src/App.tsx`. This ZIP removes the unused import only. Post-fix source/domain tests: 30/30 passed; core TypeScript check: passed. The Mac production build and full typecheck require the user to rerun `npm run typecheck && npm run build`; not independently verified here.

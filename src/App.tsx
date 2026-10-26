@@ -2,7 +2,7 @@ import { useReducer, useState } from 'react';
 import { SceneErrorBoundary } from './components/SceneErrorBoundary';
 import { StarterScene } from './components/StarterScene';
 import { Icon } from './components/Icons';
-import { CAMERA_PRESETS, DEVELOPMENT_STAGES, INITIAL_SCENE, STAGE_TOTAL, WORKSPACE, sceneReducer } from './core/stage1';
+import { DEVELOPMENT_STAGES, INITIAL_SCENE, STAGE_TOTAL, WORKSPACE, sceneReducer } from './core/stage1';
 import type { CameraPreset } from './core/stage1';
 
 const CAMERA_LABELS: Record<CameraPreset, string> = {

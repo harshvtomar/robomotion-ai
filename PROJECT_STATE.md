@@ -33,3 +33,7 @@ See `docs/QA.md` for actual test results and precise blocked checks. Source test
 5. Do not use a static robot picture as a substitute for animated articulated geometry.
 6. Do not claim physical hardware has been constructed.
 7. Keep project source and all test reports in each next-stage ZIP.
+
+## Mac verification update — 2026-10-26
+
+User supplied a Chrome screenshot showing the Stage 1 live preview rendering. The first full Mac typecheck/build failed on unused `CAMERA_PRESETS` import in `src/App.tsx`. This package includes the one-line fix. Post-fix source tests and core TypeScript check passed in the authoring environment. Complete Mac `typecheck` and `build` verification are still pending.
