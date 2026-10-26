@@ -48,3 +48,20 @@ Use **the exact Local URL shown in Terminal**, rather than assuming 5173; old St
 - Recheck one Stage 4 pickup-to-dock workflow after Stage 5 installation.
 
 Model/WASM are fetched during initial live usage and could be blocked by firewall or offline mode. Synthetic mode does not require a camera or live model inference after the application is installed.
+
+## Stage 6 Mac acceptance — MUST execute before sign-off
+
+**From `~/Downloads/robomotion-ai-stage6`:** `npm install && npm test && npm run typecheck && npm run build && npm run dev`. Tests should show **203 passed, 0 failed**. Open the exact Vite Local URL. Do not treat the prior source-only tests as proof of browser behavior.
+
+1. Verify Stages 1–4 regression: scene camera/grid/axes, manual sliders/presets, IK reachable and unreachable targets, Sample A grasp → dock release. All should still work with Stage 6 disabled.
+2. Verify Stage 5 synthetic buttons and opt-in webcam tracking, handedness display, 21-point overlay, and stop/release.
+3. Verify calibration is initially absent. Arming must refuse without starting the camera, without calibration, and while a virtual sample is held.
+4. Start webcam, display **open palm**, press Calibrate and hold steady for 12 accepted samples. After calibration, Arm live gestures should activate. Do not test with synthetic mode for actuation.
+5. Move live palm slightly left/right/up/down; visual robot should follow with smooth, bounded changes. Point should move more finely. Unreachable targets must never bypass IK or joint constraints.
+6. Form a Fist: arm must hold; form Pinch: gripper should narrow (no attachment); form Peace: gripper should widen (no release of held sample).
+7. With gestures armed, touch a manual slider or choose a pose preset: gestures **must immediately disarm** and the manual input must take priority. Repeat with Target Kinematics.
+8. While armed, remove the hand, stop the camera, switch to a synthetic fixture or hide the tab: gesture control must disarm and hold. To recover, operator must arm deliberately again.
+9. Press **EMERGENCY STOP** while moving (or in any mode): no manual slider, target Move, object grasp/release or camera gesture may move the robot. Verify Reset stop keeps the controller disabled and manual action resumes only after reset.
+10. Verify diagnostics/status are understandable at narrow Chrome width; keyboard focus and disabled button states; no uncaught Chrome console errors.
+
+**If any criterion fails**, save the screenshots and exact actions, repair Stage 6, rerun test/build; do not proceed to Stage 7. Simulation-only safeguards are not a replacement for physical safety interlocks.

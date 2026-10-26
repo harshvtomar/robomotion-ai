@@ -284,3 +284,27 @@ h1 em { color: var(--orange); font-style: normal; }
 .gesture-section .joint-footnote{border-top:1px solid #304457}
 @media(max-width:1100px){.gesture-layout{grid-template-columns:1fr}.gesture-synthetic{flex-direction:column;align-items:flex-start}.gesture-fixture-buttons{justify-content:flex-start;max-width:none}}
 @media(max-width:600px){.gesture-layout{padding:12px}.gesture-synthetic{padding:14px}.gesture-stat-card strong{font-size:24px}.gesture-info-grid b{font-size:12px}.gesture-section .joint-section-header{flex-wrap:wrap}}
+
+/* Stage 6: deliberately prominent local-only teleoperation interlocks. */
+.gesture-drive{margin-top:22px;border:1px solid #2a5365;border-radius:12px;background:linear-gradient(145deg,#112a3a,#0c1929);overflow:hidden;color:#dbeaf5;}
+.gesture-drive-header{padding:22px 24px;display:flex;gap:20px;align-items:start;justify-content:space-between;}
+.gesture-drive-header h2{margin:7px 0;font-size:21px;color:#f2f5fb;}
+.gesture-drive-header p{color:#a7becd;font-size:13px;max-width:680px;line-height:1.65;margin:0;}
+.drive-state{white-space:nowrap;border:1px solid #517180;padding:9px 12px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:1px;}
+.drive-armed{background:#103f37;color:#83f2cf;border-color:#249b83;}
+.drive-estop{background:#581b26;color:#ffc1bc;border-color:#ef6666;}
+.drive-disabled{background:#14283a;color:#a5bed1;}
+.gesture-drive-actions{padding:14px 24px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid #294559;}
+.gesture-drive-actions button{font:inherit;font-size:12px;font-weight:700;cursor:pointer;border-radius:6px;border:1px solid #496279;min-height:40px;padding:10px 14px;background:#21364d;color:#e6f2f8;}
+.gesture-drive-actions button:focus-visible{outline:2px solid #75e7da;outline-offset:3px;}
+.gesture-drive-actions button:disabled{opacity:.4;cursor:not-allowed;}
+.gesture-drive-actions .drive-arm{background:#e8a477;border-color:#e8a477;color:#112237;}
+.gesture-drive-actions .drive-stop{background:#bd3548;border-color:#f36d71;color:white;}
+.gesture-drive-actions .drive-reset{background:#432b3a;border-color:#c27986;color:#ffd5d7;}
+.drive-reason{margin:0;padding:13px 24px;color:#b9eadf;border-top:1px solid #294559;font-size:13px;min-height:45px;}
+.drive-guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #294559;}
+.drive-guide>div{padding:13px 24px;border-right:1px solid #294559;border-bottom:1px solid #294559;display:flex;gap:7px;flex-direction:column;}
+.drive-guide b{font-size:12px;color:#e5edf6;}.drive-guide span{font-size:11px;color:#a2b8c7;}
+.drive-safety{margin:0;padding:13px 24px;color:#a7bbc9;font-size:11px;line-height:1.7;}
+@media(max-width:870px){.gesture-drive-header{flex-direction:column}.drive-guide{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:520px){.drive-guide{grid-template-columns:1fr}.gesture-drive-actions button{flex:1 1 44%}}

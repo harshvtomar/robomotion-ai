@@ -57,7 +57,8 @@ test('29: no user secrets are referenced', () => {
   const code = read('src/App.tsx') + read('src/components/StarterScene.tsx');
   assert.doesNotMatch(code, /api[_-]?key|access[_-]?token|password\s*=/i);
 });
-test('30: next-stage handoff explicitly limits Stage 2 scope', () => {
-  assert.match(read('NEXT_STAGE.md'), /Stage 2/);
-  assert.match(read('NEXT_STAGE.md'), /Stage 1/);
+test('30: next-stage handoff preserves previous work and excludes Stage 7 implementation', () => {
+  assert.match(read('NEXT_STAGE.md'), /Stage 7/);
+  assert.match(read('NEXT_STAGE.md'), /Stage 6/);
+  assert.match(read('NEXT_STAGE.md'), /not started/);
 });

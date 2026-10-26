@@ -1,3 +1,4 @@
+import type {GestureFrame} from '../core/gesture-control';
 import {useEffect,useRef,useState} from 'react';
 import {analyseLandmarks,calibrate,calibratedOffset,HAND_CONNECTIONS,stableGesture,syntheticHand} from '../vision/gestures';
 import type {Calibration,GestureName,Landmark,HandObservation} from '../vision/gestures';
@@ -25,7 +26,10 @@ const safeCameraError=(error:unknown):string=>{
 };
 
 /** Stage 5 is explicitly observational: NO robot joint, IK or manipulation dispatches. */
-export function GestureLab(){
+export function GestureLab({onFrame,onUnavailable}: {onFrame?:(frame:GestureFrame)=>void;onUnavailable?:(reason:string)=>void}){
+  const onFrameRef=useRef(onFrame);onFrameRef.current=onFrame;
+  const onUnavailableRef=useRef(onUnavailable);onUnavailableRef.current=onUnavailable;
+  const calibrationRef=useRef<Calibration|null>(null);
   const videoRef=useRef<HTMLVideoElement>(null);
   const canvasRef=useRef<HTMLCanvasElement>(null);
   const streamRef=useRef<MediaStream|null>(null);
@@ -49,6 +53,7 @@ export function GestureLab(){
   const [frames,setFrames]=useState(0);
 
   function releaseCamera(){
+    onUnavailableRef.current?.('Live webcam session stopped or replaced.');
     sessionRef.current++;
     if(rafRef.current!==null){cancelAnimationFrame(rafRef.current);rafRef.current=null;}
     for(const track of streamRef.current?.getTracks()??[]) track.stop();
@@ -57,7 +62,7 @@ export function GestureLab(){
     trackerRef.current?.close();trackerRef.current=null;
   }
   function resetTracking(){historyRef.current=[];setStable('No hand');setLatest(null);setFrames(0);setHandedness('—');setModelScore(0);lastSeenFrameRef.current=-1;lastDetectedRef.current=-Infinity;paint(canvasRef.current,null);}
-  function stop(){releaseCamera();resetTracking();setMode('idle');setMessage('Webcam stopped and tracks released.');calibrationPendingRef.current=false;setCalibrationProgress(0);setCalibration(null);}
+  function stop(){releaseCamera();resetTracking();setMode('idle');setMessage('Webcam stopped and tracks released.');calibrationPendingRef.current=false;setCalibrationProgress(0);setCalibration(null);calibrationRef.current=null;}
   useEffect(()=>{
     const hidden=()=>{if(document.visibilityState==='hidden'&&streamRef.current) stop();};
     document.addEventListener('visibilitychange',hidden);
@@ -69,27 +74,29 @@ export function GestureLab(){
     const observation=analyseLandmarks(points);
     const detected=observation?.gesture??'No hand';
     historyRef.current=[...historyRef.current.slice(-4),detected];
-    setStable(stableGesture(historyRef.current));
+    const stableNow=stableGesture(historyRef.current);
+    setStable(stableNow);
     setLatest(observation);
     setFrames(value=>value+1);
     setHandedness(label);
     setModelScore(score);
     paint(canvasRef.current,points);
-    if(calibrationPendingRef.current&&points&&observation){
+    if(calibrationPendingRef.current&&points&&observation?.gesture==='Open palm'){
       calibrationSamplesRef.current.push(points.map(p=>({...p})));
       setCalibrationProgress(calibrationSamplesRef.current.length);
       if(calibrationSamplesRef.current.length>=12){
         const result=calibrate(calibrationSamplesRef.current);
         calibrationPendingRef.current=false;
         setCalibrationProgress(0);
-        if(result){setCalibration(result);setMessage(`Calibration saved from ${result.samples} ${origin} samples. Offsets are for display only.`);}
+        if(result){setCalibration(result);calibrationRef.current=result;setMessage(`Calibration saved from ${result.samples} ${origin} samples. Offsets are for display only.`);}
         else setMessage('Calibration was unstable. Keep your hand steady and retry.');
       }
     }
+    onFrameRef.current?.({source:origin,gesture:stableNow,observation,calibration:calibrationRef.current,atMs:performance.now()});
   }
   async function startCamera(){
     if(mode==='loading'||mode==='camera') return;
-    releaseCamera();resetTracking();setCalibration(null);setMode('loading');setMessage('Requesting camera access and loading the MediaPipe model…');
+    releaseCamera();resetTracking();setCalibration(null);calibrationRef.current=null;setMode('loading');setMessage('Requesting camera access and loading the MediaPipe model…');
     const session=sessionRef.current;
     try {
       if(!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('A secure localhost or HTTPS origin and a working camera are required');
@@ -121,15 +128,17 @@ export function GestureLab(){
     } catch(err){if(session===sessionRef.current){releaseCamera();resetTracking();setMode('error');setMessage(safeCameraError(err));}}
   }
   function synthetic(gesture:GestureName){
-    releaseCamera();resetTracking();setCalibration(null);setMode('synthetic');setSyntheticSelected(gesture);
+    releaseCamera();resetTracking();setCalibration(null);calibrationRef.current=null;setMode('synthetic');setSyntheticSelected(gesture);
     const points=gesture==='No hand'||gesture==='Unclassified'?null:syntheticHand(gesture);
     for(let i=0;i<5;i++) ingest(points,'synthetic','Fixture',1);
     setMessage(`${gesture} is a deterministic synthetic fixture, NOT a live camera prediction. Robot control remains disconnected.`);
   }
   function beginCalibration(){
     if(mode!=='camera'&&mode!=='synthetic'){setMessage('Start live video or select a synthetic gesture before calibrating.');return;}
+    onUnavailableRef.current?.('Recalibration started; motion disarmed.');
+    calibrationRef.current=null;setCalibration(null);
     calibrationSamplesRef.current=[];calibrationPendingRef.current=true;setCalibrationProgress(0);
-    setMessage('Hold a steady, fully visible hand for 12 detected frames.');
+    setMessage('Hold a steady, fully visible OPEN PALM for 12 detected frames.');
     if(mode==='synthetic'){
       const pts=syntheticSelected==='No hand'||syntheticSelected==='Unclassified'?null:syntheticHand(syntheticSelected);
       if(!pts){calibrationPendingRef.current=false;setMessage('Select a hand fixture before calibrating.');return;}
@@ -139,7 +148,7 @@ export function GestureLab(){
   const offset=latest?calibratedOffset(latest,calibration):null;
   return (
     <section className="gesture-section" id="gesture-controls" aria-label="Stage 5 hand gesture recognition laboratory">
-      <div className="joint-section-header"><div><div className="section-kicker">STAGE 05 / COMPUTER VISION</div><h2>Hand gesture laboratory</h2><p>Observe 21 hand landmarks, classify gestures and calibrate a neutral palm position. Stage 5 never issues robot commands.</p></div><span className="gesture-live-tag">OBSERVATION ONLY</span></div>
+      <div className="joint-section-header"><div><div className="section-kicker">STAGE 05 / COMPUTER VISION</div><h2>Hand gesture laboratory</h2><p>Observe 21 hand landmarks, classify gestures and calibrate a neutral palm position. Stage 5 recognizes hand landmarks; the independent Stage 6 panel can optionally drive only the virtual robot after explicit arming.</p></div><span className="gesture-live-tag">OBSERVATION ONLY</span></div>
       <div className="gesture-layout">
         <div className="gesture-visual-panel">
           <div className="gesture-media" aria-label="Camera and landmark overlay">
@@ -163,7 +172,7 @@ export function GestureLab(){
         </div>
       </div>
       <div className="gesture-synthetic"><div><div className="section-kicker">OFFLINE / DETERMINISTIC</div><h3>Synthetic gesture test bench</h3><p>Inject known 21-point fixtures without camera access. Useful for repeatable gesture-classifier checks and Stage 6 preparation.</p></div><div className="gesture-fixture-buttons">{DEMO_GESTURES.map(g=><button type="button" key={g} onClick={()=>synthetic(g)} aria-pressed={mode==='synthetic'&&syntheticSelected===g}>{g}</button>)}<button type="button" onClick={()=>synthetic('No hand')}>No hand</button></div></div>
-      <div className="joint-footnote">Stage 5 is passive observation only. No gesture can move joints, run IK, grasp samples, or actuate hardware. Gesture-to-robot integration is reserved for Stage 6.</div>
+      <div className="joint-footnote">Stage 5 recognition remains independent of arm motion. Stage 6 may consume live, calibrated observations only after explicit operator arming. Synthetic fixtures cannot command the robot; no physical hardware is connected.</div>
     </section>
   );
 }

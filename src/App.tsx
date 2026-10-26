@@ -12,6 +12,9 @@ import type { Vector3 } from './core/kinematics';
 import { planMotion, sampleMotion } from './core/motion';
 import { ManipulationControls } from './components/ManipulationControls';
 import { GestureLab } from './components/GestureLab';
+import { GestureControlPanel } from './components/GestureControlPanel';
+import {initialGestureControl,armGestureControl,disableGestureControl,emergencyStop,resetEmergencyStop,handleGestureFrame,expireTracking,gesturePoseStep,canArm} from './core/gesture-control';
+import type {GestureControlState,GestureFrame} from './core/gesture-control';
 import { checkTrajectory, createInitialManipulation, graspObject, releaseObject, GRIP_CLOSED, GRIP_RELEASED, objectById, dockById } from './core/manipulation';
 
 const CAMERA_LABELS: Record<CameraPreset, string> = {
@@ -30,7 +33,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <div><div className="brand-title">ROBO<span>MOTION</span></div><div className="brand-subtitle">ENGINEERING LAB <b>AI</b></div></div>
           <button type="button" className="mobile-close icon-btn" aria-label="Close menu" onClick={onClose}><Icon name="close" /></button>
         </div>
-        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.5</span></div>
+        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.6</span></div>
         <div className="nav-label">PROJECT</div>
         <nav aria-label="Project navigation" className="nav-list">
           <a href="#workspace" className="nav-item nav-active" onClick={onClose}><Icon name="cube" /> 3D Workspace <span className="nav-highlight" /></a>
@@ -38,6 +41,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <a href="#target-controls" className="nav-item" onClick={onClose}><Icon name="compass" /> Target Kinematics</a>
           <a href="#object-controls" className="nav-item" onClick={onClose}><Icon name="cube" /> Object Manipulation</a>
           <a href="#gesture-controls" className="nav-item" onClick={onClose}><Icon name="monitor" /> Hand Gesture Lab</a>
+          <a href="#gesture-robot" className="nav-item" onClick={onClose}><Icon name="orbit" /> Gesture Robot Control</a>
           <a href="#overview" className="nav-item" onClick={onClose}><Icon name="layers" /> Overview</a>
           <a href="#build-roadmap" className="nav-item" onClick={onClose}><Icon name="compass" /> Build Roadmap</a>
         </nav>
@@ -49,9 +53,9 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
         </div>
         <div className="sidebar-bottom">
           <div className="side-progress">
-            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>05 <em>/ 08</em></strong></div>
-            <div className="progress-track"><span style={{ width: `${500 / STAGE_TOTAL}%` }} /></div>
-            <p>Webcam gesture recognition</p>
+            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>06 <em>/ 08</em></strong></div>
+            <div className="progress-track"><span style={{ width: `${600 / STAGE_TOTAL}%` }} /></div>
+            <p>Safe gesture-to-robot control</p>
           </div>
           <div className="side-signature"><span className="signature-mark">◈</span><span>Designed to build real understanding.<br /><strong>One stage at a time.</strong></span></div>
         </div>
@@ -60,7 +64,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
   );
 }
 
-function RobotControls({ pose, dispatch }: { pose: RobotPose; dispatch: Dispatch<RobotAction> }) {
+function RobotControls({ pose, dispatch, locked }: { pose: RobotPose; dispatch: Dispatch<RobotAction>; locked:boolean }) {
   const activePreset = (Object.keys(POSE_PRESETS) as PosePreset[]).find(
     (key) => JOINT_KEYS.every((joint) => pose[joint] === POSE_PRESETS[key][joint]),
   );
@@ -68,12 +72,12 @@ function RobotControls({ pose, dispatch }: { pose: RobotPose; dispatch: Dispatch
     <section className="joint-section" id="joint-controls" aria-label="Manual robotic arm controls">
       <div className="joint-section-header">
         <div><div className="section-kicker">ARTICULATED ARM / MANUAL DRIVE</div><h2>Joint control console</h2><p>Move six independent channels. Commands stay within mechanical limits and animate smoothly in the 3D viewport.</p></div>
-        <button type="button" className="pose-reset" onClick={() => dispatch({ type: 'RESET_POSE' })}><Icon name="reset" size={15}/> Reset pose</button>
+        <button type="button" className="pose-reset" disabled={locked} onClick={() => dispatch({ type: 'RESET_POSE' })}><Icon name="reset" size={15}/> Reset pose</button>
       </div>
       <div className="preset-row" aria-label="Robot pose presets">
         <span>QUICK POSES</span>
         {(Object.keys(POSE_PRESETS) as PosePreset[]).map((preset) => (
-          <button key={preset} type="button" aria-pressed={activePreset === preset} className={`preset-pill ${activePreset === preset ? 'preset-selected' : ''}`} onClick={() => dispatch({ type: 'APPLY_PRESET', preset })}>{preset}</button>
+          <button key={preset} type="button" aria-pressed={activePreset === preset} disabled={locked} className={`preset-pill ${activePreset === preset ? 'preset-selected' : ''}`} onClick={() => dispatch({ type: 'APPLY_PRESET', preset })}>{preset}</button>
         ))}
       </div>
       <div className="joint-grid">
@@ -84,9 +88,9 @@ function RobotControls({ pose, dispatch }: { pose: RobotPose; dispatch: Dispatch
               <div className="joint-head"><span className="joint-number">J{String(index + 1).padStart(2, '0')}</span><label htmlFor={`joint-${joint}`}>{spec.label}</label><output htmlFor={`joint-${joint}`} className="joint-value">{pose[joint]}<span>{spec.unit}</span></output></div>
               <div className="joint-subtitle">{spec.description}</div>
               <div className="joint-input-row">
-                <button type="button" className="nudge-button" aria-label={`Decrease ${spec.label}`} disabled={pose[joint] <= spec.min} onClick={() => dispatch({ type: 'NUDGE_JOINT', joint, direction: -1 })}>−</button>
-                <input type="range" id={`joint-${joint}`} min={spec.min} max={spec.max} step={spec.step} value={pose[joint]} onChange={(event) => dispatch({ type: 'SET_JOINT', joint, value: Number(event.target.value) })} aria-valuetext={`${pose[joint]}${spec.unit}`} style={{ '--joint-fill': `${((pose[joint] - spec.min) / (spec.max - spec.min)) * 100}%` } as CSSProperties} />
-                <button type="button" className="nudge-button" aria-label={`Increase ${spec.label}`} disabled={pose[joint] >= spec.max} onClick={() => dispatch({ type: 'NUDGE_JOINT', joint, direction: 1 })}>+</button>
+                <button type="button" className="nudge-button" aria-label={`Decrease ${spec.label}`} disabled={locked || pose[joint] <= spec.min} onClick={() => dispatch({ type: 'NUDGE_JOINT', joint, direction: -1 })}>−</button>
+                <input type="range" id={`joint-${joint}`} disabled={locked} min={spec.min} max={spec.max} step={spec.step} value={pose[joint]} onChange={(event) => dispatch({ type: 'SET_JOINT', joint, value: Number(event.target.value) })} aria-valuetext={`${pose[joint]}${spec.unit}`} style={{ '--joint-fill': `${((pose[joint] - spec.min) / (spec.max - spec.min)) * 100}%` } as CSSProperties} />
+                <button type="button" className="nudge-button" aria-label={`Increase ${spec.label}`} disabled={locked || pose[joint] >= spec.max} onClick={() => dispatch({ type: 'NUDGE_JOINT', joint, direction: 1 })}>+</button>
               </div>
               <div className="joint-extents"><span>{spec.min}{spec.unit}</span><span>{spec.max}{spec.unit}</span></div>
             </div>
@@ -107,9 +111,9 @@ function pointFromDraft(draft:TargetDraft): Vector3 | null {
 function targetDraftFrom(p:Vector3):TargetDraft { return {x:p.x.toFixed(3),y:p.y.toFixed(3),z:p.z.toFixed(3)}; }
 const DEMO_POSE:RobotPose = { ...HOME_POSE, base:40, shoulder:-18, elbow:78, wristPitch:-60 };
 
-function TargetControls({draft,onDraft,pose,onMove,onStop,moving,message}: {
+function TargetControls({draft,onDraft,pose,onMove,onStop,moving,message,locked}: {
   draft:TargetDraft; onDraft:(value:TargetDraft)=>void; pose:RobotPose;
-  onMove:()=>void; onStop:()=>void; moving:boolean; message:string;
+  onMove:()=>void; onStop:()=>void; moving:boolean; message:string; locked:boolean;
 }) {
   const point=pointFromDraft(draft);
   const solution=point ? inverseKinematics(point,pose) : null;
@@ -133,7 +137,7 @@ function TargetControls({draft,onDraft,pose,onMove,onStop,moving,message}: {
             <button type="button" onClick={()=>onDraft(targetDraftFrom(forwardKinematics(DEMO_POSE)))}>Demo point</button>
           </div>
           <div className="target-actions">
-            <button className="target-go" type="button" disabled={!solution?.ok || moving} onClick={onMove}>{moving?'Moving…':'Move to target'}</button>
+            <button className="target-go" type="button" disabled={!solution?.ok || moving || locked} onClick={onMove}>{moving?'Moving…':'Move to target'}</button>
             <button className="target-stop" type="button" onClick={onStop} disabled={!moving}>Stop motion</button>
           </div>
           <p className="motion-message" role="status" aria-live="polite">{message}</p>
@@ -166,6 +170,52 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
 export default function App() {
   const [settings, dispatch] = useReducer(sceneReducer, INITIAL_SCENE);
   const [robotPose, robotDispatch] = useReducer(robotReducer, HOME_POSE);
+  const [gestureControl,setGestureControl] = useState<GestureControlState>(initialGestureControl);
+  const gestureRef=useRef<GestureControlState>(gestureControl);
+  const latestGestureFrame=useRef<GestureFrame|null>(null);
+  const [liveEligible,setLiveEligible]=useState(false);
+  function updateGestureControl(next:GestureControlState){gestureRef.current=next;setGestureControl(next);}
+  function disableTeleop(reason='Manual controls took priority; gesture control disarmed.'){
+    if(gestureRef.current.mode==='armed') updateGestureControl(disableGestureControl(gestureRef.current,reason));
+  }
+  function eStop(){cancelMotion();updateGestureControl(emergencyStop(gestureRef.current));setMotionMessage('EMERGENCY STOP: all simulated motion disabled until reset.');}
+  function onGestureUnavailable(reason:string){
+    latestGestureFrame.current=null;setLiveEligible(false);disableTeleop(reason);
+  }
+  function onGestureFrame(frame:GestureFrame){
+    latestGestureFrame.current=frame;
+    setLiveEligible(canArm(frame,performance.now(),manipulation.heldId)===null);
+    const before=gestureRef.current;
+    if(before.mode!=='armed') return;
+    const outcome=handleGestureFrame(before,frame,manipulation.heldId);
+    if(outcome.state!==before && (outcome.state.mode!==before.mode || outcome.state.reason!==before.reason)) updateGestureControl(outcome.state);
+    else gestureRef.current=outcome.state;
+    if(outcome.state.mode!=='armed'||outcome.command.kind==='hold') return;
+    const dt=Math.min(0.15,Math.max(0,(frame.atMs-(before.lastCommandAt??frame.atMs))/1000));
+    if(dt<=0) return;
+    const step=gesturePoseStep(currentPose.current,outcome.command,dt);
+    if(!step.ok){updateGestureControl({...outcome.state,reason:step.reason,lastCommandAt:frame.atMs});return;}
+    const safety=checkTrajectory(manipulation,currentPose.current,step.pose);
+    if(!safety.ok){updateGestureControl({...outcome.state,reason:`Gesture motion blocked: ${safety.reason}`,lastCommandAt:frame.atMs});return;}
+    currentPose.current=step.pose;
+    robotDispatch({type:'SET_POSE',pose:step.pose});
+    gestureRef.current={...outcome.state,lastCommandAt:frame.atMs};
+  }
+  function armLiveGesture(){
+    if(gestureRef.current.mode==='estop') return;
+    const next=armGestureControl(gestureRef.current,latestGestureFrame.current,currentPose.current,performance.now(),manipulation.heldId);
+    if(next.mode==='armed') {cancelMotion();setApproachingObjectId(null);setMotionMessage('Live gesture control active. Manual actions disarm it.');}
+    updateGestureControl(next);
+  }
+  useEffect(()=>{
+    const interval=window.setInterval(()=>{
+      const state=gestureRef.current;
+      const expired=expireTracking(state,performance.now());
+      if(expired!==state) updateGestureControl(expired);
+    },150);
+    return()=>window.clearInterval(interval);
+  },[]);
+
   const [sceneReady, setSceneReady] = useState(false);
   const [manipulation,setManipulation] = useState(createInitialManipulation);
   const [selectedObjectId,setSelectedObjectId] = useState('sample-1');
@@ -187,6 +237,8 @@ export default function App() {
   }
   useEffect(()=>()=>{if(motionFrame.current!==null) cancelAnimationFrame(motionFrame.current);},[]);
   function dispatchManual(action:RobotAction) {
+    if(gestureRef.current.mode==='estop'){setMotionMessage('EMERGENCY STOP latched: reset stop to move.');return;}
+    disableTeleop();
     const from = currentPose.current;
     const next=robotReducer(from,action);
     if(manipulation.heldId && next.gripper>=GRIP_RELEASED){
@@ -203,7 +255,8 @@ export default function App() {
     robotDispatch(action);
   }
   function loadPickup(){
-    cancelMotion();
+    if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
+    disableTeleop();cancelMotion();
     const object=objectById(manipulation,selectedObjectId);
     if(!object){setManipulationMessage('Unknown sample.');return;}
     setApproachingObjectId(object.id);
@@ -211,7 +264,8 @@ export default function App() {
     setManipulationMessage(`Pickup position for ${object.label} loaded. Move to target, then grasp.`);
   }
   function loadDock(){
-    cancelMotion();
+    if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
+    disableTeleop();cancelMotion();
     const station=dockById(selectedDockId);
     if(!station){setManipulationMessage('Unknown dock.');return;}
     setApproachingObjectId(null);
@@ -219,6 +273,8 @@ export default function App() {
     setManipulationMessage(`Coordinates for ${station.label} loaded. Move to target, then release.`);
   }
   function graspSelected(){
+    if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
+    disableTeleop();
     if(moving){setManipulationMessage('Allow the robot to finish moving before grasping.');return;}
     const closed={...currentPose.current,gripper:GRIP_CLOSED};
     const result=graspObject(manipulation,selectedObjectId,closed);
@@ -230,6 +286,8 @@ export default function App() {
     setApproachingObjectId(null);
   }
   function releaseSelected(){
+    if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
+    disableTeleop();
     if(moving){setManipulationMessage('Allow the robot to finish moving before releasing.');return;}
     const result=releaseObject(manipulation,selectedDockId,currentPose.current);
     if(!result.ok){setManipulationMessage(result.reason);return;}
@@ -239,13 +297,15 @@ export default function App() {
     setManipulationMessage(result.message);
   }
   function resetObjects(){
-    cancelMotion();
+    if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
+    disableTeleop();cancelMotion();
     setManipulation(createInitialManipulation());
     setSelectedObjectId('sample-1');setSelectedDockId('dock-a');setApproachingObjectId(null);
     setManipulationMessage('Three samples restored to source stations.');
   }
   function moveToTarget(){
-    cancelMotion();
+    if(gestureRef.current.mode==='estop'){setMotionMessage('E-stop active: reset before target movement.');return;}
+    disableTeleop();cancelMotion();
     const point=pointFromDraft(targetDraft);
     if(!point){setMotionMessage('Target must contain three valid coordinates.');return;}
     const result=inverseKinematics(point,currentPose.current);
@@ -268,6 +328,7 @@ export default function App() {
   }
 
   function resetWorkspace() {
+    disableTeleop();
     dispatch({ type: 'RESET' });
     setResetVersion((version) => version + 1);
   }
@@ -277,14 +338,14 @@ export default function App() {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <main className="main" id="workspace">
         <header className="topbar">
-          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 05</span></div>
-          <div className="topbar-right"><span className="dot-status" /><span>GESTURE LAB READY</span><span className="version-pill">v0.5.0</span></div>
+          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 06</span></div>
+          <div className="topbar-right"><span className="dot-status" /><span>GESTURE CONTROL READY</span><span className="version-pill">v0.6.0</span></div>
         </header>
 
         <div className="page-content">
           <section className="intro" id="overview">
             <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 005</span></div>
-            <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, manipulate virtual samples between elevated stations, and inspect camera-based hand gestures without moving the robot.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
+            <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, manipulate virtual samples between elevated stations, and optionally use a calibrated live webcam to control the simulated arm behind deliberate safety interlocks.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
           </section>
 
           <section className="workspace-section" aria-label="3D engineering environment">
@@ -294,9 +355,9 @@ export default function App() {
                 <div className="viewport-top"><div className="viewport-title"><span className="live-ring" /> LIVE 3D VIEWPORT <span className="viewport-divider">/</span> <span className="view-soft">ARTICULATED ARM</span></div><div className="viewport-top-right"><span>WEBGL</span><span className="mini-separator">·</span><span>{sceneReady ? 'RENDERER READY' : 'INITIALIZING'}</span></div></div>
                 <div className="scene-window">
                   <SceneErrorBoundary>
-                    <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} onReady={() => setSceneReady(true)} />
+                    <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} frozen={gestureControl.mode==='estop'} onReady={() => setSceneReady(true)} />
                   </SceneErrorBoundary>
-                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-05</span><span>6 joints · Position IK · Procedural model</span></div>
+                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-06</span><span>6 joints · Position IK · Procedural model</span></div>
                   <div className="scene-corner scene-bottom-left"><span className="scene-led" /> <span>{settings.animateBeacon ? 'BEACON ACTIVE' : 'BEACON PAUSED'}</span></div>
                   <div className="scene-corner scene-bottom-right"><span>DRAG TO ROTATE</span><span className="zoom-help">SCROLL TO ZOOM</span></div>
                 </div>
@@ -322,44 +383,47 @@ export default function App() {
                   <span className="control-label">SCENE INFORMATION</span>
                   <dl className="property-list"><div><dt>Coordinate system</dt><dd>Right-handed</dd></div><div><dt>Up axis</dt><dd>+Y</dd></div><div><dt>Workspace size</dt><dd>{WORKSPACE.width} × {WORKSPACE.depth} m</dd></div><div><dt>Grid divisions</dt><dd>{WORKSPACE.gridDivisions}</dd></div><div><dt>Camera</dt><dd>{CAMERA_LABELS[settings.camera]}</dd></div><div><dt>Manual channels</dt><dd>6</dd></div></dl>
                   <div className="inspector-rule" />
-                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 5 · Gesture lab ready</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Webcam recognition is independent of the robot.</p></div></div>
+                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 6 · Optional teleoperation</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Live webcam gestures can operate only the simulated robot after explicit arming.</p></div></div>
                 </div>
-                <div className="inspector-footer"><span className="footer-led"/>STAGE 05 / 08 <span className="footer-right">HAND TRACKING</span></div>
+                <div className="inspector-footer"><span className="footer-led"/>STAGE 06 / 08 <span className="footer-right">GESTURE DRIVE</span></div>
               </aside>
             </div>
           </section>
 
-          <RobotControls pose={robotPose} dispatch={dispatchManual} />
-          <TargetControls draft={targetDraft} onDraft={value=>{if(moving){cancelMotion();setMotionMessage("Motion cancelled because target coordinates changed.");}setApproachingObjectId(null);setTargetDraft(value);}} pose={robotPose} onMove={moveToTarget} onStop={()=>{cancelMotion();setMotionMessage('Motion stopped by user.');}} moving={moving} message={motionMessage} />
+          <RobotControls pose={robotPose} dispatch={dispatchManual} locked={gestureControl.mode==='estop'} />
+          <TargetControls draft={targetDraft} onDraft={value=>{disableTeleop();if(moving){cancelMotion();setMotionMessage("Motion cancelled because target coordinates changed.");}setApproachingObjectId(null);setTargetDraft(value);}} pose={robotPose} onMove={moveToTarget} onStop={()=>{cancelMotion();setMotionMessage('Motion stopped by user.');}} moving={moving} message={motionMessage} locked={gestureControl.mode==='estop'} />
 
           <ManipulationControls state={manipulation} selectedId={selectedObjectId} selectedDockId={selectedDockId}
             onSelect={id=>{setSelectedObjectId(id);setApproachingObjectId(null);}} onDock={setSelectedDockId}
             onLoadPickup={loadPickup} onLoadDock={loadDock} onGrasp={graspSelected} onRelease={releaseSelected}
             onReset={resetObjects} message={manipulationMessage}/>
 
-          <GestureLab />
+          <GestureLab onFrame={onGestureFrame} onUnavailable={onGestureUnavailable} />
+          <GestureControlPanel mode={gestureControl.mode} reason={gestureControl.reason} ready={liveEligible} held={!!manipulation.heldId}
+            onArm={armLiveGesture} onDisable={()=>updateGestureControl(disableGestureControl(gestureRef.current))}
+            onEmergency={eStop} onReset={()=>updateGestureControl(resetEmergencyStop(gestureRef.current))} />
 
           <section className="metrics-section" aria-label="Project engineering indicators">
-            <Stat label="DEVELOPMENT STAGE" value="05 / 08" sub="Hand gestures" />
+            <Stat label="DEVELOPMENT STAGE" value="06 / 08" sub="Safety-gated teleoperation" />
             <Stat label="SCENE RENDERER" value="Three.js" sub="WebGL · React Three Fiber" />
             <Stat label="REFERENCE AXES" value="X · Y · Z" sub="Right-handed coordinate system" />
-            <Stat label="ROBOT CONTROL" value="GESTURES" sub="Passive 21-point hand tracking" />
+            <Stat label="ROBOT CONTROL" value="TELEOP" sub="Opt-in simulation only" />
           </section>
 
           <section className="roadmap" id="build-roadmap">
             <div className="section-line roadmap-line"><div><span className="section-number">03</span><h2>The build roadmap</h2></div><span className="section-aside">8 DEVELOPMENT STAGES</span></div>
             <div className="roadmap-list">
               {DEVELOPMENT_STAGES.map((stage, index) => (
-                <div className={`roadmap-item ${index === 4 ? 'roadmap-current' : ''}`} key={stage}>
+                <div className={`roadmap-item ${index === 5 ? 'roadmap-current' : ''}`} key={stage}>
                   <span className="roadmap-index">{String(index + 1).padStart(2, '0')}</span>
                   <span className="roadmap-title">{stage}</span>
-                  <span className={`roadmap-status ${index === 4 ? 'current-status' : ''}`}>{index < 4 ? 'COMPLETE' : index === 4 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
-                  <span className="roadmap-indicator">{index <= 4 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
+                  <span className={`roadmap-status ${index === 5 ? 'current-status' : ''}`}>{index < 5 ? 'COMPLETE' : index === 5 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
+                  <span className="roadmap-indicator">{index <= 5 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
                 </div>
               ))}
             </div>
           </section>
-          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 5 gestures · Observation only · No robot actuation</span></footer>
+          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 6 · Calibrated live gestures · Simulation only</span></footer>
         </div>
       </main>
     </div>

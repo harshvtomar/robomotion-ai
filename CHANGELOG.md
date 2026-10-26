@@ -52,3 +52,13 @@
 - Added deterministic synthetic gesture test bench independent of live camera.
 - Preserved all existing Stage 1–4 arm, scene, motion, docking and safety workflows.
 - Added Stage 5 tests and Mac handoff. No gesture-to-robot control until Stage 6.
+
+## [0.6.0] — 2026-10-26 — Stage 6 safe gesture-to-robot simulator
+
+- Built a pure TypeScript live-camera-only authority state machine (disabled/armed/E-stop) that rejects uncalibrated, stale, synthetic or missing-hand input.
+- Wired Stage 5 tracking into a separately armed Stage 6 control panel without directly dispatching gestures from the video component.
+- Added calibration-anchored bounded workspace movement, fine Point control, virtual gripper Pinch/Peace mapping, Fist hold, speed-constrained smooth pose increments, IK checks and Stage 4 trajectory clearance screening.
+- Added immediate manual override, explicit disable, tracking timeout/watchdog, and latched simulation E-stop/reset.
+- Stage 5 webcam remains opt-in and camera tracks clean up; calibration now accumulates open-palm frames only.
+- Preserved all previous features; updated historical source expectation, added 45 Stage 6 safety/regression tests (total 203 passing).
+- No physical hardware interfacing; Stage 7 deliberately excluded.

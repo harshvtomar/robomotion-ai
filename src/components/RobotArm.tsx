@@ -88,7 +88,7 @@ function Finger({ side }: { side: -1 | 1 }) {
   );
 }
 
-export function RobotArm({ pose, held }: { pose: RobotPose; held?: VirtualObject | null }) {
+export function RobotArm({ pose, held, frozen = false }: { pose: RobotPose; held?: VirtualObject | null; frozen?: boolean }) {
   const base = useRef<Group>(null);
   const shoulder = useRef<Group>(null);
   const elbow = useRef<Group>(null);
@@ -99,6 +99,7 @@ export function RobotArm({ pose, held }: { pose: RobotPose; held?: VirtualObject
   const current = useRef<Record<JointKey, number>>({ ...HOME_POSE });
 
   useFrame((_, delta) => {
+    if (frozen) return;
     for (const key of Object.keys(current.current) as JointKey[]) {
       current.current[key] = easeJoint(current.current[key], pose[key], delta);
     }

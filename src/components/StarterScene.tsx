@@ -78,7 +78,7 @@ function OriginPlinth({ running }: { running: boolean }) {
   );
 }
 
-function StarterWorld({ settings, resetVersion, pose, target, objects, heldId }: { settings: SceneSettings; resetVersion: number; pose: RobotPose; target: Vector3 | null; objects: VirtualObject[]; heldId: string | null }) {
+function StarterWorld({ settings, resetVersion, pose, target, objects, heldId, frozen }: { settings: SceneSettings; resetVersion: number; pose: RobotPose; target: Vector3 | null; objects: VirtualObject[]; heldId: string | null; frozen: boolean }) {
   return (
     <>
       <color attach="background" args={['#0b1727']} />
@@ -96,7 +96,7 @@ function StarterWorld({ settings, resetVersion, pose, target, objects, heldId }:
       )}
       {settings.showAxes && <axesHelper args={[2.15]} position={[-2.3, 0.01, 2.2]} />}
       <OriginPlinth running={settings.animateBeacon} />
-      <RobotArm pose={pose} held={objects.find(object => object.id === heldId) ?? null} />
+      <RobotArm pose={pose} frozen={frozen} held={objects.find(object => object.id === heldId) ?? null} />
       <VirtualStations objects={objects} heldId={heldId} />
       {target && Math.hypot(target.x, target.z) <= 4.5 && target.y >= 0 && target.y <= 4.5 && (
         <group position={[target.x, target.y, target.z]} name="stage-3-target-marker">
@@ -110,7 +110,7 @@ function StarterWorld({ settings, resetVersion, pose, target, objects, heldId }:
   );
 }
 
-export function StarterScene({ settings, resetVersion, onReady, pose, target, objects, heldId }: {
+export function StarterScene({ settings, resetVersion, onReady, pose, target, objects, heldId, frozen = false }: {
   settings: SceneSettings;
   resetVersion: number;
   onReady: () => void;
@@ -118,6 +118,7 @@ export function StarterScene({ settings, resetVersion, onReady, pose, target, ob
   target: Vector3 | null;
   objects: VirtualObject[];
   heldId: string | null;
+  frozen?: boolean;
 }) {
   return (
     <Canvas
@@ -129,7 +130,7 @@ export function StarterScene({ settings, resetVersion, onReady, pose, target, ob
       onCreated={onReady}
       fallback={<div className="canvas-fallback" role="alert">3D rendering requires WebGL. Try Chrome or Safari with hardware acceleration enabled.</div>}
     >
-      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} target={target} objects={objects} heldId={heldId} />
+      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} target={target} objects={objects} heldId={heldId} frozen={frozen} />
     </Canvas>
   );
 }

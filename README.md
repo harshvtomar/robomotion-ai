@@ -1,26 +1,46 @@
 # RoboMotion AI — Gesture-Controlled Robotic Arm Digital Twin
 
-**Release:** v0.5.0 · **Stage 5/8: Webcam Hand Gesture Recognition** · October 26, 2026  
-**Stack:** React 19, TypeScript, Vite, Three.js, React Three Fiber, MediaPipe Tasks Vision
+**Version 0.6.0 · Stage 6/8 · October 26, 2026**  
+React 19 · TypeScript · Vite · Three.js / React Three Fiber · MediaPipe Tasks Vision
 
-A browser-based robotic-arm simulation built stage by stage. The work in this release is a **passive hand-tracking laboratory**; hand signals do **not** move the arm. This is an engineering **simulation**, not a physical robotic arm or experimentally certified robot controller.
+A browser-based **simulation** of a multi-joint robotic arm. Stage 6 adds a safety-gated mapping from **live, calibrated webcam gestures** to **virtual** joint commands. It is not an industrial controller or a physical robotics system.
 
-## Existing functionality preserved
+## Features preserved from Stages 1–5
 
-- Stage 1 — Dark engineering dashboard; procedural calibration scene, orbit camera, grid/axes toggles.
-- Stage 2 — Six bounded joint controls, four pose presets, manual gripper and smooth visual movements.
-- Stage 3 — Forward kinematics, analytic upright-tool position inverse kinematics, reachability checks and time-bounded target motion.
-- Stage 4 — Three virtual samples and three docking stations, simulated contact/grasp/release with sampled tool/object clearance checks.
-- Stage 5 — **New:** Webcam hand-landmark overlay, heuristic gesture classification, stability voting, calibration and synthetic mode.
+- 3D environment with orbit camera, grid, axes, resets and responsive dashboard.
+- Six articulated manual joints with clamped ranges, four pose presets, smooth render interpolation.
+- Forward and inverse position kinematics, upright tool constraint, reachability bounds, targeted movement.
+- Three virtual samples and elevated source/dock fixtures, discrete grasp and release, sampled tool/object collision checks.
+- Optional webcam + MediaPipe HandLandmarker (21 points), heuristic gesture recognition, stable voting, neutral-hand calibration and six synthetic fixture options (including No hand).
 
-## Run on macOS
+## New Stage 6 controls
 
-Requires **Node.js >=22.12** and Internet access for installing npm dependencies. Put the ZIP in Downloads, then:
+The **Gesture-to-Robot Control** panel is deliberately independent of the camera/recognition module:
+
+| Gesture | Behavior once manually ARMED |
+|---|---|
+| Open palm | Follow calibrated, bounded hand displacement in virtual XYZ |
+| Point | Smaller fine-position adjustment |
+| Fist | Hold pose (do not move) |
+| Pinch | Close **virtual** gripper to 22%; never automatically grasp an object |
+| Peace | Open **virtual** gripper to 66%; never automatically drop an object |
+| No hand / lost frames | Immediately disarm; all new gesture commands stop |
+
+**All gesture movements require:** a fresh camera frame, live hand (synthetic never qualifies), calibration, explicit Arm click, valid IK, per-joint speed/limit control and Stage 4 sampled tool/object clearance checks. Calibration is anchored to current tool position when the user arms, to avoid a jump. There is no camera video upload by application code; MediaPipe model/WASM are fetched from third-party hosts and SDK diagnostics may be transmitted. No hardware interface exists.
+
+- **Disable gesture control:** stops hand actuation; manual controls remain available.
+- **EMERGENCY STOP:** latches off *all simulated motion*, including manual and target movement; **Reset stop** clears it but never rearms gestures automatically. This is **not a certified physical E-stop**.
+- **Manual override:** any manual slider, pose preset, IK target selection, or manipulation operation disarms gesture control.
+- **No held-object teleoperation:** user must manually dock/release an attached sample before arming. Pinch/Peace manipulate finger spacing only, not the grasp state.
+
+## Mac install and verification
+
+Node 22.12+ and npm network access are required for initial setup. Extract the archive into Downloads, then:
 
 ```bash
 cd ~/Downloads
-unzip RoboMotion_AI_Stage5_Webcam_Gestures.zip
-cd robomotion-ai-stage5
+unzip RoboMotion_AI_Stage6_Gesture_Robot_Integration.zip
+cd robomotion-ai-stage6
 npm install
 npm test
 npm run typecheck
@@ -28,36 +48,20 @@ npm run build
 npm run dev
 ```
 
-Open the exact local URL printed by Vite. Existing servers may occupy ports 5173–5177; do **not** assume a port number. Use Chrome, enable webcam access if requested, and check that the video is not shared with any web page other than this local app.
+Open the **Local** URL shown by Vite (do not assume a port). In Chrome:
 
-## Hand Gesture Lab
+1. Open **Hand Gesture Lab**, start webcam and allow access.
+2. Hold a stable **open palm** and click **Calibrate**. Wait for 12 accepted open-palm frames.
+3. With your palm visible, click **Arm live gestures** in the Stage 6 panel. Move your palm gently to see the arm move; allow small movements first. Use Point for fine motion.
+4. Test Fist hold; Pinch and Peace finger spacing, manual slider override, synthetic selection disarming, hand-loss disarming, and Emergency Stop/reset.
+5. Check the browser console for errors. Test Stage 4 docking again to confirm no regressions.
 
-Scroll to **Hand Gesture Lab** or use the left navigation link.
+See `docs/QA.md` for the complete Mac acceptance checklist.
 
-1. Try the **synthetic test bench** first: Open palm, Fist, Point, Peace, Pinch or No hand. The deterministic fixture displays an illustrative 21-point skeleton and a stable gesture label without requiring a camera.
-2. Press **Calibrate** in synthetic mode to sample 12 frames and show normalized palm offset and relative scale.
-3. Press **Start webcam** to request permission. Only after this click does the app obtain a camera stream and lazy-load the `@mediapipe/tasks-vision@1.1.1` module/model. A 21-landmark skeleton is shown over the live video.
-4. Hold one hand in clear lighting, then try the gestures. The stable label requires at least three agreeing readings in a five-frame window.
-5. Press **Stop & release** or switch tabs: the camera tracks should stop. Starting again requires a new click.
+## Test evidence and limitations
 
-**Privacy / connectivity:** The application itself does not upload/store/record webcam video. Hand inference runs locally. The model downloads from Google MediaPipe storage and version-pinned WebAssembly from jsDelivr at runtime, so first live use needs Internet access. The MediaPipe SDK may collect usage metrics/diagnostics. Camera access requires `localhost`/`127.0.0.1` or HTTPS.
-
-**Accuracy:** Gesture labels are derived from hand-landmark geometry, not from an independently trained gesture classification model. The displayed heuristic score is not an actual calibrated confidence/probability. A separate MediaPipe handedness score may appear. Dim lighting, overlapping fingers, obscured hands and nonstandard angles may lower accuracy.
-
-**Boundaries:** Webcam gestures cannot trigger joint motion, IK, grasp or hardware control. Stage 6 will add explicitly gated control with safety measures. The Stage 4 simulated tool/object collision checks do not guarantee rigid-body collision freedom or physical grasp accuracy.
-
-## Development commands
-
-| Command | Purpose |
-|---|---|
-| `npm test` | 158 Node tests covering Stages 1–5 |
-| `npm run typecheck:core` | Standalone Stage 1–4 robotics and Stage 5 gesture geometry TypeScript check |
-| `npm run typecheck` | Full React/TypeScript check (after npm install) |
-| `npm run build` | Production bundle (after npm install) |
-| `npm run dev` | Local app preview |
-
-## Completion evidence
-
-The new source has **158/158 passing Node tests** and the dependency-free core TypeScript check has passed. Full React typecheck/Vite build and actual Mac webcam/MediaPipe inference **were not verified in this build runtime**, because npm dependencies could not be downloaded. Perform the Mac checklist in `docs/QA.md` before marking Stage 5 fully accepted.
-
-Start next session using the current ZIP plus `PROJECT_STATE.md` and `NEXT_STAGE.md`. Preserve prior functionality. **Stage 6 has not been started.**
+- **203/203 Node unit/source tests passed** in the creation environment.
+- **Core TypeScript** passed; all 18 TS/TSX files parsed without syntax errors.
+- **Full React typecheck/build and real webcam-to-robot control must still be verified on the Mac**. npm dependencies could not be fetched in the source-generation environment.
+- Webcam classification is a simple landmark-geometry heuristic, **not** a rigorously evaluated gesture model. Motion occurs only in virtual kinematics; actual pose may ease after commanded pose. No full-link/self-collision safety, rigid-body grasp dynamics or real sensors.
+- Stage 7 diagnostics/dashboard enhancements are **not implemented**.
