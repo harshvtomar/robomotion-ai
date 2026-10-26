@@ -11,6 +11,7 @@ import { distance, formatMetres, forwardKinematics, inverseKinematics, ROBOT_GEO
 import type { Vector3 } from './core/kinematics';
 import { planMotion, sampleMotion } from './core/motion';
 import { ManipulationControls } from './components/ManipulationControls';
+import { GestureLab } from './components/GestureLab';
 import { checkTrajectory, createInitialManipulation, graspObject, releaseObject, GRIP_CLOSED, GRIP_RELEASED, objectById, dockById } from './core/manipulation';
 
 const CAMERA_LABELS: Record<CameraPreset, string> = {
@@ -29,27 +30,28 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <div><div className="brand-title">ROBO<span>MOTION</span></div><div className="brand-subtitle">ENGINEERING LAB <b>AI</b></div></div>
           <button type="button" className="mobile-close icon-btn" aria-label="Close menu" onClick={onClose}><Icon name="close" /></button>
         </div>
-        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.4</span></div>
+        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.5</span></div>
         <div className="nav-label">PROJECT</div>
         <nav aria-label="Project navigation" className="nav-list">
           <a href="#workspace" className="nav-item nav-active" onClick={onClose}><Icon name="cube" /> 3D Workspace <span className="nav-highlight" /></a>
           <a href="#joint-controls" className="nav-item" onClick={onClose}><Icon name="orbit" /> Joint Controls</a>
           <a href="#target-controls" className="nav-item" onClick={onClose}><Icon name="compass" /> Target Kinematics</a>
           <a href="#object-controls" className="nav-item" onClick={onClose}><Icon name="cube" /> Object Manipulation</a>
+          <a href="#gesture-controls" className="nav-item" onClick={onClose}><Icon name="monitor" /> Hand Gesture Lab</a>
           <a href="#overview" className="nav-item" onClick={onClose}><Icon name="layers" /> Overview</a>
           <a href="#build-roadmap" className="nav-item" onClick={onClose}><Icon name="compass" /> Build Roadmap</a>
         </nav>
         <div className="nav-label nav-label-second">ENGINEERING</div>
         <div className="nav-list">
           <a href="#target-controls" className="nav-item" onClick={onClose}><Icon name="orbit" /> Inverse Kinematics <span className="soon">LIVE</span></a>
-          <div className="nav-item nav-disabled" aria-disabled="true"><Icon name="monitor" /> Gesture Control <span className="soon">S5</span></div>
+          <a href="#gesture-controls" className="nav-item" onClick={onClose}><Icon name="monitor" /> Gesture Recognition <span className="soon">LIVE</span></a>
           <div className="nav-item nav-disabled" aria-disabled="true"><Icon name="shield" /> Diagnostics <span className="soon">S7</span></div>
         </div>
         <div className="sidebar-bottom">
           <div className="side-progress">
-            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>04 <em>/ 08</em></strong></div>
-            <div className="progress-track"><span style={{ width: `${400 / STAGE_TOTAL}%` }} /></div>
-            <p>Virtual object manipulation</p>
+            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>05 <em>/ 08</em></strong></div>
+            <div className="progress-track"><span style={{ width: `${500 / STAGE_TOTAL}%` }} /></div>
+            <p>Webcam gesture recognition</p>
           </div>
           <div className="side-signature"><span className="signature-mark">◈</span><span>Designed to build real understanding.<br /><strong>One stage at a time.</strong></span></div>
         </div>
@@ -275,14 +277,14 @@ export default function App() {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <main className="main" id="workspace">
         <header className="topbar">
-          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 04</span></div>
-          <div className="topbar-right"><span className="dot-status" /><span>OBJECT LAB ONLINE</span><span className="version-pill">v0.4.0</span></div>
+          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 05</span></div>
+          <div className="topbar-right"><span className="dot-status" /><span>GESTURE LAB READY</span><span className="version-pill">v0.5.0</span></div>
         </header>
 
         <div className="page-content">
           <section className="intro" id="overview">
-            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 004</span></div>
-            <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, and manipulate virtual samples between elevated stations.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
+            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 005</span></div>
+            <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, manipulate virtual samples between elevated stations, and inspect camera-based hand gestures without moving the robot.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
           </section>
 
           <section className="workspace-section" aria-label="3D engineering environment">
@@ -294,7 +296,7 @@ export default function App() {
                   <SceneErrorBoundary>
                     <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} onReady={() => setSceneReady(true)} />
                   </SceneErrorBoundary>
-                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-04</span><span>6 joints · Position IK · Procedural model</span></div>
+                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-05</span><span>6 joints · Position IK · Procedural model</span></div>
                   <div className="scene-corner scene-bottom-left"><span className="scene-led" /> <span>{settings.animateBeacon ? 'BEACON ACTIVE' : 'BEACON PAUSED'}</span></div>
                   <div className="scene-corner scene-bottom-right"><span>DRAG TO ROTATE</span><span className="zoom-help">SCROLL TO ZOOM</span></div>
                 </div>
@@ -320,9 +322,9 @@ export default function App() {
                   <span className="control-label">SCENE INFORMATION</span>
                   <dl className="property-list"><div><dt>Coordinate system</dt><dd>Right-handed</dd></div><div><dt>Up axis</dt><dd>+Y</dd></div><div><dt>Workspace size</dt><dd>{WORKSPACE.width} × {WORKSPACE.depth} m</dd></div><div><dt>Grid divisions</dt><dd>{WORKSPACE.gridDivisions}</dd></div><div><dt>Camera</dt><dd>{CAMERA_LABELS[settings.camera]}</dd></div><div><dt>Manual channels</dt><dd>6</dd></div></dl>
                   <div className="inspector-rule" />
-                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 4 · Object lab online</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations support virtual sample pickup and placement.</p></div></div>
+                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 5 · Gesture lab ready</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Webcam recognition is independent of the robot.</p></div></div>
                 </div>
-                <div className="inspector-footer"><span className="footer-led"/>STAGE 04 / 08 <span className="footer-right">PICK & PLACE</span></div>
+                <div className="inspector-footer"><span className="footer-led"/>STAGE 05 / 08 <span className="footer-right">HAND TRACKING</span></div>
               </aside>
             </div>
           </section>
@@ -335,27 +337,29 @@ export default function App() {
             onLoadPickup={loadPickup} onLoadDock={loadDock} onGrasp={graspSelected} onRelease={releaseSelected}
             onReset={resetObjects} message={manipulationMessage}/>
 
+          <GestureLab />
+
           <section className="metrics-section" aria-label="Project engineering indicators">
-            <Stat label="DEVELOPMENT STAGE" value="04 / 08" sub="Object manipulation" />
+            <Stat label="DEVELOPMENT STAGE" value="05 / 08" sub="Hand gestures" />
             <Stat label="SCENE RENDERER" value="Three.js" sub="WebGL · React Three Fiber" />
             <Stat label="REFERENCE AXES" value="X · Y · Z" sub="Right-handed coordinate system" />
-            <Stat label="ROBOT CONTROL" value="PICK + PLACE" sub="Discrete virtual grasping" />
+            <Stat label="ROBOT CONTROL" value="GESTURES" sub="Passive 21-point hand tracking" />
           </section>
 
           <section className="roadmap" id="build-roadmap">
             <div className="section-line roadmap-line"><div><span className="section-number">03</span><h2>The build roadmap</h2></div><span className="section-aside">8 DEVELOPMENT STAGES</span></div>
             <div className="roadmap-list">
               {DEVELOPMENT_STAGES.map((stage, index) => (
-                <div className={`roadmap-item ${index === 3 ? 'roadmap-current' : ''}`} key={stage}>
+                <div className={`roadmap-item ${index === 4 ? 'roadmap-current' : ''}`} key={stage}>
                   <span className="roadmap-index">{String(index + 1).padStart(2, '0')}</span>
                   <span className="roadmap-title">{stage}</span>
-                  <span className={`roadmap-status ${index === 3 ? 'current-status' : ''}`}>{index < 3 ? 'COMPLETE' : index === 3 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
-                  <span className="roadmap-indicator">{index <= 3 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
+                  <span className={`roadmap-status ${index === 4 ? 'current-status' : ''}`}>{index < 4 ? 'COMPLETE' : index === 4 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
+                  <span className="roadmap-indicator">{index <= 4 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
                 </div>
               ))}
             </div>
           </section>
-          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 4 virtual manipulation · Discrete pick-and-place</span></footer>
+          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 5 gestures · Observation only · No robot actuation</span></footer>
         </div>
       </main>
     </div>

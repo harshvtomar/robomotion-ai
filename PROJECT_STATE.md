@@ -1,41 +1,34 @@
-# RoboMotion AI — Current Project State
+# RoboMotion AI — Source state
 
-**Version:** 0.4.0 · **Stage:** 4 of 8 — Virtual Object Manipulation  
-**Source baseline:** Stage 3 verified on user's Mac in earlier conversation; complete original Stage 3 source copied without reset. Git history preserved.  
-**Repository:** local project only; this ZIP does not represent a GitHub push or deployment.
+**Current:** v0.5.0 · Stage 05/08 — Webcam hand gestures and synthetic classification.  
+**Previous:** Stage 4 v0.4.0 verified by the user on Mac with one successful physical-looking **virtual** docking; full production build completed on Mac.  
+**Source:** Retained Stage 4 files and Git history; additive Stage 5 components under `src/vision/`, `src/components/GestureLab.tsx` and tests.
 
-## Implemented in Stage 4
+## Implemented by stage
 
-- Three coloured procedurally rendered virtual samples (box, sphere, octahedron) plus 3 pickup stations and 3 destination docks.
-- R3F scene stations and free samples; a held sample becomes a child of the Stage 2/3 wrist-roll group at the Stage 3 TCP offset, so it follows **visually smoothed** joint animation.
-- Select sample / load pickup coordinates / use existing IK Move to target / close-and-grasp within 0.19 m.
-- Select target dock / load dock coordinates / move via existing Stage 3 IK / release only within 0.19 m of a free docking station with non-overlapping geometry.
-- Discrete state transitions in `src/core/manipulation.ts`, workspace/floor checks, occupied-dock checks, static sample bounding-sphere overlaps, and **sampled TCP-plus-held-object versus static sample** path clearance checks.
-- Manual joint controls and pose presets preserved; manual actions are checked against approximate object clearances. Gripper opening while holding requires a valid dock release.
-- A reset of just the virtual-object state. Stage 1 scene reset and Stage 2 robot-pose reset remain separate.
-- New Stage 4 UI and styles, 0.4.0 versioning, source tests, Mac verification guide, and handoff.
+1. Foundation: Vite/React/Three scene, camera controls, responsive dashboard.
+2. Articulated arm: six joint channels, limits, manual sliders and presets.
+3. Forward/inverse kinematics, target-motion controls, bounded plans and solver checks.
+4. Virtual objects: three samples/docks, grasp/release and sampled collision checks.
+5. Hand recognition: optional webcam, MediaPipe hand landmarks, gesture classifier, calibration, synthetic demo mode, privacy-safe camera cleanup.
 
-## Verification completed here
+## Verification status
 
-- 139/139 Node tests passed (114 Stage 1–3 regression tests + 25 new Stage 4 cases), zero failures.
-- Core TypeScript typecheck `npm run typecheck:core` passed.
-- Dependency-independent transpile syntax checks of all 14 TypeScript/TSX/config files passed.
-- Tested success-path calculations for all three source-to-matching-dock transfers and failure cases (invalid pickup, invalid dock, overlap, occupied dock, unreachable/out-of-bounds, collision).
+- Prior to modification Stage 4: **139/139 Node tests passed**.
+- Stage 5: **158/158 Node tests passed**, core-only TS passed.
+- Full React/Vite typecheck and build: **requires Mac npm installation**; no claim of passing in this sandbox.
+- Real webcam, MediaPipe model/CDN and classification quality: **requires Mac verification**.
+- Stage 6 gesture-to-robot integration: **NOT implemented**.
 
-## Verification still required
+## Run on the Mac
 
-- This environment lacks React/Three/Vite dependencies; **full React `npm run typecheck`, Vite `npm run build`, and Chrome WebGL/interactive QA have not passed here**. Check them on your Mac using `docs/QA.md` before declaring Stage 4 accepted.
-- The commanded TCP may briefly lead the visual arm during easing. Let the animated arm settle before grasp/release.
-- Current collision approximation does **not** guarantee self-collision safety, arm-link collisions with stands, grasp-force stability, physical dynamics, or true rigid-body physics. The elevated stations are **virtual fixtures** used because Stage 3's upright IK cannot reach ordinary floor-level samples.
-- No real camera, hand gesture recognition, real robot integration, or hardware actuation exists.
+`npm install && npm test && npm run typecheck && npm run build && npm run dev`
 
-## Stage boundary
+Use the local Vite address shown in Terminal. If 5173–5177 are occupied, the new instance will likely run on a later port; use the actual output rather than assuming.
 
-- Stage 5 hand gesture recognition **NOT started**.
-- Stage 6 gesture-to-robot mapping **NOT started**.
-- Stage 7 engineering diagnostics **NOT started**.
-- Stage 8 final end-to-end QA and public deployment **NOT started**.
+## Important technical constraints
 
-## Continue
-
-Use this entire Stage 4 ZIP, never restart from an earlier stage. Run `npm install && npm test && npm run typecheck && npm run build && npm run dev` on your Mac, inspect WebGL behaviour using `docs/QA.md`, then proceed with Stage 5 only if requested.
+- MediaPipe version `1.1.1` installed through npm; matching WASM hosted by jsDelivr; hand model hosted by Google's MediaPipe model storage.
+- Camera requires explicit interaction and secure localhost/HTTPS; video is processed in browser only. SDK may collect diagnostics.
+- Heuristic 2D landmark gesture classifier is **not a trained neural classification head**. Expected false positives in difficult conditions; use synthetic mode for deterministic tests.
+- Avoid recreating or replacing previous Stage 4 implementations; use current project archive and `NEXT_STAGE.md`.

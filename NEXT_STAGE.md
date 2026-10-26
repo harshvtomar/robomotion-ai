@@ -1,30 +1,21 @@
-# Next Stage — RoboMotion AI Stage 5
+# Stage 6 handoff — Gesture-to-Robot Control (not started)
 
-**Do not start Stage 5 during the current Stage 4 task.**
+## Proven baseline
 
-## Mandatory prerequisite
+- Last completed source: **RoboMotion AI v0.5.0**.
+- Stage 1 foundation, Stage 2 articulated robotic arm, Stage 3 FK/IK target motion, Stage 4 discrete object manipulation, Stage 5 hand observation and synthetic gesture testing.
+- Stage 5 Node test suite: **158/158 passed** in the build environment, plus core TS pass.
+- User must still run npm install, full React typecheck, production build and live webcam acceptance on Mac before approving Stage 6.
 
-Run and visually confirm the complete Stage 4 application on the user's Mac:
+## Stage 6 goals (future work only)
 
-```bash
-cd ~/Downloads/robomotion-ai-stage4
-npm install
-npm test
-npm run typecheck
-npm run build
-npm run dev
-```
+- Calibrate camera-to-workspace mapping with explicit user agreement, conservative scaling, safety clamping and dead zones.
+- Introduce a **gated** gesture-to-robot controller (default OFF, explicit ARM control enable, prominent emergency STOP).
+- Smooth jittery commands, handle lost tracking, out-of-bounds inputs and repeated recognition; no motion if confidence/stability insufficient.
+- Map recognized gestures to safe digital-arm actions using existing Stage 3 bounded FK/IK and Stage 4 discrete grasp rules, never bypassing collision restrictions.
+- Make simulation-only limitations transparent; do not claim physical robot actuation.
+- Integrate synthetic e2e tests for every gesture and fail-safe state, plus Mac webcam testing.
 
-Use the port printed by Vite (may be 5176 or higher if old Stage 1, Stage 2, Stage 3 servers are running). Run the browser acceptance checklist in `docs/QA.md`. Preserve the checkpoint before adding new features.
+## Strict boundaries
 
-## Planned Stage 5 — Webcam Hand Gesture Recognition (separate chat)
-
-1. Inspect this ZIP and all original Stage 1–4 features, especially the Stage 2 manual controls, Stage 3 IK, and Stage 4 object state.
-2. Implement browser-based hand recognition using a supported MediaPipe model, with user-granted webcam permission, loading/error states and device teardown.
-3. Provide a synthetic landmark fixture/replay mode to test without a webcam.
-4. Implement stable gesture classification with thresholds and rejection/unknown class; report non-guaranteed accuracy truthfully.
-5. Add explicit privacy UI, no camera capture/uploads by default, and user-controlled Start/Stop.
-6. Keep gestures **read-only** during Stage 5. Stage 6 will map them to arm commands.
-7. Add Node tests and browser QA; update all project handoff files and complete source ZIP.
-
-Do not implement Stage 6, Stage 7 or Stage 8 early. No physical robotics claims.
+Preserve Stage 5 observation mode as a standalone fallback. Maintain camera permission/cleanup guarantees and video privacy. Never attach raw `latest` gesture states directly to robot dispatches. Introduce a separate explicit interlock and verify transitions. Keep source and ZIP handoffs across stages.

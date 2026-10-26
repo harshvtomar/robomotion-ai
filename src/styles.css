@@ -249,3 +249,38 @@ h1 em { color: var(--orange); font-style: normal; }
 .manipulation-message { padding:14px 24px; color:#9ce6d8; font-size:12px; min-height:43px; border-top:1px solid #2d4359; }
 @media(max-width:1200px){.manipulation-grid{grid-template-columns:1fr 1fr}.manip-card:last-child{grid-column:1/-1}}
 @media(max-width:700px){.manipulation-grid{grid-template-columns:1fr}.manip-card:last-child{grid-column:auto}.manipulation-head{padding:20px 16px;flex-direction:column;align-items:flex-start}.manipulation-status{padding:14px}}
+
+/* Stage 5: hand tracking laboratory — isolated from robot controls */
+.gesture-section{background:#0f1c2a;border:1px solid #304457;border-radius:11px;overflow:hidden;margin-top:24px;scroll-margin-top:85px}
+.gesture-live-tag{color:#73d9c4;border:1px solid #36796f;padding:9px 12px;font-size:9px;font-weight:800;letter-spacing:1.2px;border-radius:6px;white-space:nowrap}
+.gesture-layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:16px;padding:18px 20px}
+.gesture-visual-panel,.gesture-info{min-width:0}
+.gesture-media{position:relative;overflow:hidden;aspect-ratio:4/3;max-height:400px;background:radial-gradient(ellipse at 50% 48%,#1f3a50,#07111f 80%);border:1px solid #364d60;border-radius:9px}
+.gesture-video,.gesture-overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.gesture-video{opacity:0}.gesture-video.gesture-visible{opacity:1}.gesture-overlay{z-index:2;pointer-events:none}
+.gesture-empty{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;color:#b6d0de;pointer-events:none;z-index:1;text-align:center;text-shadow:0 1px 10px #07111f}
+.gesture-empty-symbol{font-size:40px;opacity:.55;display:block}.gesture-empty strong{letter-spacing:1.4px;font-size:11px}.gesture-empty span:last-child{font-size:11px;color:#93a9b8}
+.gesture-media-status{position:absolute;top:14px;left:14px;z-index:3;background:#0b1c2bdd;border:1px solid #365267;padding:6px 9px;border-radius:5px;color:#80dbc8;font-weight:800;font-size:9px;letter-spacing:1px}
+.gesture-action-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.gesture-action-row button{border-radius:6px;padding:11px 12px;font-size:11px;font-weight:750}
+.gesture-primary{background:#f3a672;border:1px solid #f3a672;color:#162131}.gesture-secondary{background:#1c3144;border:1px solid #3e556a;color:#e5f3fa}
+.gesture-action-row button:disabled{opacity:.45;cursor:not-allowed}
+.gesture-message{font-size:11px;line-height:1.6;min-height:26px;color:#9fdbda;margin:13px 0 4px}
+.gesture-privacy{font-size:10px;line-height:1.7;color:#93a7b9}
+.gesture-stat-card{background:linear-gradient(120deg,#1c3942,#14302e);border:1px solid #347b74;border-radius:9px;padding:19px;margin-bottom:12px}
+.gesture-stat-card span,.gesture-info-grid span{display:block;letter-spacing:1.1px;color:#9ab9c5;font-size:9px;font-weight:850}
+.gesture-stat-card strong{display:block;color:#ecfff9;font-size:29px;margin:11px 0 7px}.gesture-stat-card small{font-size:10px;color:#96c7c0}
+.gesture-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gesture-info-grid>div{background:#102438;border:1px solid #30495d;border-radius:8px;padding:13px}
+.gesture-info-grid b{font-size:14px;display:block;color:#e4eef5;margin-top:12px}
+.gesture-calibration{margin-top:12px;background:#15283a;border:1px solid #344e60;border-radius:9px;padding:16px}
+.gesture-calibration h3{font-size:14px;margin:0 0 8px}.gesture-calibration p,.gesture-calibration small{font-size:11px;line-height:1.6;color:#a6b8c8}
+.gesture-progress{height:5px;background:#263d50;border-radius:10px;overflow:hidden;margin:10px 0}.gesture-progress span{display:block;height:100%;background:#72d6c8;transition:width .15s}
+.gesture-synthetic{border-top:1px solid #304356;padding:17px 20px;background:#102030;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.gesture-synthetic h3{margin:7px 0;font-size:16px}.gesture-synthetic p{font-size:11px;color:#9cafbf;line-height:1.6;margin:0;max-width:540px}
+.gesture-fixture-buttons{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:410px}
+.gesture-fixture-buttons button{font-size:11px;border-radius:6px;padding:9px 11px;background:#1f3446;border:1px solid #3d5264;color:#d3e2eb;white-space:nowrap}
+.gesture-fixture-buttons button:hover,.gesture-fixture-buttons button[aria-pressed=true]{background:#46382f;color:#ffd5b5;border-color:#ac7b5c}
+.gesture-section .joint-footnote{border-top:1px solid #304457}
+@media(max-width:1100px){.gesture-layout{grid-template-columns:1fr}.gesture-synthetic{flex-direction:column;align-items:flex-start}.gesture-fixture-buttons{justify-content:flex-start;max-width:none}}
+@media(max-width:600px){.gesture-layout{padding:12px}.gesture-synthetic{padding:14px}.gesture-stat-card strong{font-size:24px}.gesture-info-grid b{font-size:12px}.gesture-section .joint-section-header{flex-wrap:wrap}}

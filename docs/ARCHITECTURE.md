@@ -36,3 +36,12 @@ Collision sampling traverses the same smoothstep commanded trajectory as Stage 3
 ## Acceptance boundary
 
 139 deterministic Node tests and core TypeScript checks passed here. Full React/Vite build and browser-level WebGL interaction must run on Mac before Stage 4 is accepted. Stage 5 gesture recognition is not included.
+
+## Stage 5 vision boundary
+
+- `src/vision/gestures.ts` — pure geometry heuristic, temporal voting, calibration, and synthetic landmark fixtures.
+- `src/vision/mediapipe.ts` — lazy, on-demand MediaPipe Tasks Vision Hand Landmarker adapter, pinned package/runtime version.
+- `src/components/GestureLab.tsx` — self-contained local webcam preview, camera permission/release lifecycle, skeleton overlay, synthetic test UI.
+- `src/App.tsx` renders the Gesture Lab as an observational child only; it neither passes `robotDispatch` nor grants `manipulation`/`moveToTarget` callbacks.
+
+Risk boundaries: no inferred physical robot motion, no automatic camera access, no video persistence, no Stage 6 gesture-to-robot bridge.

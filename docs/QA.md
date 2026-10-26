@@ -35,3 +35,16 @@ Use **the exact Local URL shown in Terminal**, rather than assuming 5173; old St
 - **Not modelled:** full arm-link or pedestal collision, true rigid-body physics, gravity, grasp friction or forces. Avoid claims of collision-free industrial autonomy.
 - A Vite chunk-size warning is not itself a failed build.
 - If a runtime error occurs, preserve console logs and exact reproduction steps, then repair Stage 4 before starting Stage 5.
+
+## Stage 5 Mac acceptance (not yet performed)
+
+- `npm install && npm test && npm run typecheck && npm run build`: all must pass before accepting Stage 5.
+- Open `#gesture-controls`, verify five synthetic gestures, "No hand", stable labels, and synthetic calibration.
+- Start webcam in Chrome and approve permission: verify live hand landmarks/gesture labels.
+- Deny permission once and verify graceful failure and camera recovery via retry.
+- Click Stop & release; confirm macOS camera indicator extinguishes, and restart requires another click.
+- Switch away from tab while running: confirm release on hide.
+- Confirm no gesture affects existing joint, IK, or grasp state.
+- Recheck one Stage 4 pickup-to-dock workflow after Stage 5 installation.
+
+Model/WASM are fetched during initial live usage and could be blocked by firewall or offline mode. Synthetic mode does not require a camera or live model inference after the application is installed.

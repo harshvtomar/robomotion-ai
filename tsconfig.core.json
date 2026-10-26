@@ -15,6 +15,7 @@
     "allowImportingTsExtensions": true
   },
   "include": [
-    "src/core"
+    "src/core",
+    "src/vision/gestures.ts"
   ]
 }

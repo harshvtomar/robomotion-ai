@@ -45,3 +45,10 @@
 - Preserved Stage 1–3 UI, pose limits, six sliders, camera controls, analytic IK and trajectory commands.
 - Updated prior version-gated source-contract tests and added 25 Stage 4 regression tests, for 139 total passing Node tests.
 - Stage 5 webcam recognition intentionally excluded.
+
+## [0.5.0] - 2026-10-26 — Stage 5 gesture observation
+- Added MediaPipe HandLandmarker webcam module with explicit opt-in permission, lazy model loading and camera cleanup.
+- Added 21-point visual skeleton, heuristic open-palm/fist/point/peace/pinch classification, stable voting and calibration.
+- Added deterministic synthetic gesture test bench independent of live camera.
+- Preserved all existing Stage 1–4 arm, scene, motion, docking and safety workflows.
+- Added Stage 5 tests and Mac handoff. No gesture-to-robot control until Stage 6.
