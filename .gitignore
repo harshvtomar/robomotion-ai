@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+.vite/
+*.log
+
+# Reproducible local measurement artifacts (produced by npm run report:bundle)
+reports/
