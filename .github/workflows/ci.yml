@@ -1,4 +1,4 @@
-name: RoboMotion Stage 1 CI
+name: RoboMotion Stage 2 CI
 on:
   push:
   pull_request:
@@ -12,7 +12,8 @@ jobs:
         with:
           node-version: '22'
       # No package-lock.json until an authenticated npm install succeeds.
-      # Stage 2 should commit a lockfile and replace this with npm ci.
+      # Generate and commit package-lock.json from a successful trusted Mac npm install,
+      # then switch this install step to npm ci for reproducible builds.
       - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run typecheck

@@ -1,39 +1,43 @@
 # RoboMotion AI — Project State
 
-**Baseline:** `v0.1.0` — Stage 1 source delivered 2026-10-26.  
-**Current stage:** 1 of 8 — Foundation & Engineering Workspace.  
-**Next stage:** 2 — 3D Robotic Arm.  
-**Local Git remote:** none (do not claim published or deployed).  
-**Project data/credentials:** none required.
+**Current stage:** 2 of 8, **version:** 0.2.0  
+**Base source:** `RoboMotion_AI_Stage1_Typecheck_Fix.zip`; original Stage 1 baseline ran **30/30** passing tests before changes.  
+**Local working source:** Full `robomotion-ai-stage2/` tree in ZIP; Stage 1 is preserved rather than rebuilt.
 
-## Implemented in Stage 1
+## Implemented
 
-- Vite/React/TypeScript architecture with React Three Fiber 9 / Three.js
-- Responsive app shell and isolated real-time starter scene
-- Right-handed coordinate reference, calibration base, grid and axis markers
-- Isometric/front/top camera views, reset, grid/axes toggles, beacon pause
-- Basic accessibility (semantic navigation, controls, focus style, error fallback)
-- Pure state/action data model and unit tests
-- Documentation, initial CI definition, packaging and next-stage contract
+- Stage 1 React/TS/Vite shell, dark responsive dashboard, 3D Canvas, calibration pedestal, OrbitControls, camera presets, ground/grid/axes, beacon toggle, canvas error boundary, reset-view button.
+- Stage 2 procedural articulated 3D arm mounted to the original pedestal; animated base/shoulder/elbow/wrist pitch/wrist roll; symmetric two-finger gripper.
+- Six manually configurable joints with explicit numerical limits. Native slider +/− inputs, readouts, percent indicator for gripper, keyboard range input, home/upright/inspect/folded quick poses, independent reset pose.
+- Pure robot-control domain module with validated/clamped values, immutable initial pose and presets, deterministic damping, and gripper width mapping; no shared mutable state with Stage 1 scene controls.
+- Unit/invariant tests and integration-source contracts. Source documentation and Stage 3 handoff.
 
-## Deliberately not implemented
+## Intended boundaries
 
-Robotic arm geometry, actual servo or joint state, IK/FK, gripper, virtual object pickup, gesture recognition, camera permission handling, collision physics, data logging, authentication or public deployment. Do not report any of these as complete.
+- Manual joint rotation is a scene visualization; it does **not** solve target-point inverse kinematics (Stage 3), execute pick-and-place or collision physics (Stage 4), use a camera (Stage 5), or operate a real robot.
+- Joint stops are software command limits only. The model has simplified mesh geometry and no self-collision detection. Displayed robot uses arbitrary scale approximating meters, not manufactured hardware tolerance.
+- Smooth animation updates visual pivot groups using `useFrame` and an exponential approach. UI shows command target, not measured/physical angles.
 
-## Verification
+## Verified in this runtime
 
-See `docs/QA.md` for actual test results and precise blocked checks. Source test success does not constitute running a browser-based app.
+- Stage 1 original tests: 30/30 passed *before modifications*.
+- Stage 2 local Node test suite: **74 passed, 0 failed**.
+- Core TS check: **passed**; **9 TS/TSX/config files** passed syntax transpilation. Full React typecheck/build pending npm dependencies.
 
-## Immutable carry-forward requirements
+## Must verify on your Mac
 
-1. Do **not** recreate this repository from scratch for Stage 2.
-2. Preserve the working Stage 1 calibration scene and controls.
-3. Add the robot through a clearly separated component and joint-state model.
-4. Preserve `src/core/stage1.ts` APIs or migrate them with backward-compatible tests.
-5. Do not use a static robot picture as a substitute for animated articulated geometry.
-6. Do not claim physical hardware has been constructed.
-7. Keep project source and all test reports in each next-stage ZIP.
+1. `npm install && npm test && npm run typecheck && npm run build`.
+2. `npm run dev`, real Chrome WebGL rendering. Verify each of the six sliders, +/− limit buttons and presets, camera/grid/axes/beacon/reset, desktop/narrow screens.
+3. Save screenshot and screen recording of interactive arm if needed for a resume/Builders.mu application.
 
-## Mac verification update — 2026-10-26
+## Out of scope / pending
 
-User supplied a Chrome screenshot showing the Stage 1 live preview rendering. The first full Mac typecheck/build failed on unused `CAMERA_PRESETS` import in `src/App.tsx`. This package includes the one-line fix. Post-fix source tests and core TypeScript check passed in the authoring environment. Complete Mac `typecheck` and `build` verification are still pending.
+- Stage 3 inverse kinematics/forward kinematics and reachability solver: **not started**.
+- Stage 4 object pickup, grip collision & physics: not started.
+- Stage 5 hand recognition and Stage 6 gesture integration: not started.
+- Stage 7 diagnostic analysis and Stage 8 integration: not started.
+- GitHub push, public deployment, and live webcam validation: not attempted here.
+
+## Continuation
+
+Attach the complete Stage 2 ZIP to the next chat and follow `NEXT_STAGE.md`. Preserve functioning code and assertions; don't rebuild from scratch.

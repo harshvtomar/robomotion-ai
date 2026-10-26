@@ -1,55 +1,44 @@
-# Architecture — RoboMotion AI v0.1.0
+# Architecture — RoboMotion AI v0.2.0
 
-## Stack
-
-- **UI:** React 19, TypeScript 5, CSS (system fonts; no image/font fetching)
-- **Dev/build:** Vite 7
-- **3D:** Three.js via React Three Fiber 9; Drei `OrbitControls`
-- **Test:** built-in Node test runner for pure contracts/source sanity (no test runner dependency)
-- **Hosting:** designed for static hosting via Vite's `dist/` folder, but no deployment has been performed
-
-React 19 + Fiber 9 was chosen to avoid the alpha v10 API; see upstream documentation for compatibility.
-
-## Data flow
+## Runtime layout
 
 ```text
 src/main.tsx
-  └── App.tsx (useReducer + UI state)
-       ├── Sidebar (project stages and anchors)
-       ├── scene tools (camera/grid/axes/animation/reset)
-       ├── SceneErrorBoundary
-       │    └── StarterScene (Canvas)
-       │         ├── StarterWorld (lights/floor/grid/axes)
-       │         ├── OriginPlinth + CalibrationBeacon
-       │         └── CameraRig + OrbitControls
-       └── Stage roadmap and educational metadata
-             ↑
-       src/core/stage1.ts (pure settings, reducer, presets)
+└── App.tsx
+    ├── Sidebar + stage roadmap (Stage 1 retained)
+    ├── Scene controls: camera/grid/axes/beacon/reset (stage1 reducer)
+    ├── SceneErrorBoundary
+    │   └── StarterScene.tsx: R3F Canvas, lights, ground, preserved pedestal/beacon
+    │       ├── RobotArm.tsx: 3D procedural hierarchical joints and gripper
+    │       └── CameraRig + OrbitControls
+    └── RobotControls: 6 sliders, fine +/- buttons, presets, reset
+          └── robotReducer (src/core/robot.ts)
 ```
 
-## Units / coordinates
+There are **two independent state machines**: Stage 1 `sceneReducer` for camera/grid/axes/beacon and Stage 2 `robotReducer` for commanded robot pose. Camera reset does not affect the arm; pose reset does not affect the camera.
 
-Right-handed Three.js coordinates, `+Y` up, ground at approximately `-0.13 m` in world units, 10 m square reference grid. These are simulated dimensions; Stage 2 must define physically meaningful arm link lengths separately.
+## Local joint transforms
 
-## Reducer contract
+- World coordinates: right-handed, **+Y up** (Three.js). All articulated links in a **parent-child hierarchy**.
+- Base yaw: rotation about local `Y` at pedestal.
+- Shoulder pitch: rotation around shoulder-local `Z`, with upper arm extending along local `+Y`.
+- Elbow pitch: rotation around elbow-local `Z`, at end of upper arm, moving forearm relative to upper arm.
+- Wrist pitch: rotation around wrist-local `Z`, forearm end; roll: rotation about the tool's local `Y`.
+- Gripper opening: left/right finger positions move symmetrically along tool-local `X`. It is a visual width command; no contact or dynamics are simulated.
 
-Actions: `SET_CAMERA`, `TOGGLE_GRID`, `TOGGLE_AXES`, `TOGGLE_MOTION`, `RESET`. `RESET` also increments a camera-reset counter so that manually orbiting then resetting works even if already in the default camera preset.
+The prescribed mesh dimensions are stylized, approximately world-meter-scale: upper arm 1.16 units, forearm 0.96 units, wrist housing roughly 0.36 units. They are not precise factory joint lengths or calibrated measurements. Stages 3–4 should define formal kinematic geometry and a collision model separately before claiming motion accuracy.
 
-`onCreated` indicates a WebGL canvas is ready; no server connectivity or robot hardware is implied.
+## Input invariants
 
-## Rendering notes
+- All manual joint requests use `clampJoint()`, rejecting nonfinite values and unrecognized joints and bounding each joint to its declared `min/max`.
+- `robotReducer` leaves original state untouched, applies only one joint, supports nudge/presets/reset.
+- Preset values are immutable. UI reports commanded target values; `RobotArm` interpolates to them in `useFrame` with `easeJoint()`.
+- Smooth interpolation is delta-time aware and monotonic for a fixed command; not a velocity-, torque- or collision-limited actuator model.
 
-- Grid reference and calibration base are procedural 3D geometry, not sprites.
-- Beacon spin is the only autonomous motion in Stage 1.
-- OrbitControls enables rotate + wheel zoom; panning is disabled to keep focus on the origin.
-- Frame pixel ratio capped for modest laptops.
-- Scene fallback and React error boundary preserve a readable UI if WebGL fails.
-- No telemetry, sensors, or true physics are present at this stage.
+## Stage 1 preserved
 
-## Stage 2 extension seams
+`StarterScene` retains the calibration pedestal, Stage 1 grid and axes, the OrbitControls camera and the optional rotating calibration beacon (moved to side of platform to avoid overlapping arm). Mobile nav, controls and fallback remain.
 
-- Add `src/core/joints.ts` with typed geometry/limits and reducer.
-- Add `src/components/RobotArm.tsx` with hierarchical joint transform groups.
-- Keep calibration model selectable/optional; do not unconditionally replace the foundation.
-- Make sliders accessible and state deterministic so tests can validate joint limits.
-- No camera/media permission necessary until Stage 5.
+## Limitations
+
+No IK, FK readout, control loop feedback from physical sensors, physics contact model, digital-twin synchronization, ROS, hardware, webcam, telemetry collection or deployment. The word *digital twin* here is a prototype visualization, not a connected physical counterpart.

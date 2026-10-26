@@ -4,17 +4,19 @@ import { OrbitControls } from '@react-three/drei';
 import type { Group } from 'three';
 import { CAMERA_PRESETS, WORKSPACE } from '../core/stage1';
 import type { CameraPreset, SceneSettings } from '../core/stage1';
+import type { RobotPose } from '../core/robot';
+import { RobotArm } from './RobotArm';
 
 function CameraRig({ preset, resetVersion }: { preset: CameraPreset; resetVersion: number }) {
   const { camera, invalidate } = useThree();
   useEffect(() => {
     const pose = CAMERA_PRESETS[preset];
     camera.position.set(pose.x, pose.y, pose.z);
-    camera.lookAt(0, 0.3, 0);
+    camera.lookAt(0, 1.35, 0);
     camera.updateProjectionMatrix();
     invalidate();
   }, [camera, preset, resetVersion, invalidate]);
-  return <OrbitControls key={`${preset}:${resetVersion}`} target={[0, 0.3, 0]} enableDamping dampingFactor={0.08} minDistance={3.3} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
+  return <OrbitControls key={`${preset}:${resetVersion}`} target={[0, 1.35, 0]} enableDamping dampingFactor={0.08} minDistance={3.3} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
 }
 
 function CalibrationBeacon({ running }: { running: boolean }) {
@@ -43,7 +45,7 @@ function CalibrationBeacon({ running }: { running: boolean }) {
 function OriginPlinth({ running }: { running: boolean }) {
   return (
     <group>
-      {/* Neutral calibration plinth only. The robotic arm is Stage 2. */}
+      {/* Stage 1 plinth preserved under the articulated Stage 2 arm. */}
       <mesh position={[0, 0.02, 0]} receiveShadow castShadow>
         <cylinderGeometry args={[1.45, 1.55, 0.25, 96]} />
         <meshStandardMaterial color="#1b2d3f" metalness={0.68} roughness={0.31} />
@@ -68,20 +70,12 @@ function OriginPlinth({ running }: { running: boolean }) {
           </mesh>
         </group>
       ))}
-      <mesh position={[0, 0.66, 0]} castShadow>
-        <cylinderGeometry args={[0.09, 0.22, 0.75, 16]} />
-        <meshStandardMaterial color="#365d71" metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[0, 1.05, 0]} castShadow>
-        <cylinderGeometry args={[0.34, 0.13, 0.13, 40]} />
-        <meshStandardMaterial color="#4b7886" metalness={0.7} roughness={0.24} />
-      </mesh>
-      <CalibrationBeacon running={running} />
+      <group position={[-1.8, 0, -1.6]} scale={0.52}><CalibrationBeacon running={running} /></group>
     </group>
   );
 }
 
-function StarterWorld({ settings, resetVersion }: { settings: SceneSettings; resetVersion: number }) {
+function StarterWorld({ settings, resetVersion, pose }: { settings: SceneSettings; resetVersion: number; pose: RobotPose }) {
   return (
     <>
       <color attach="background" args={['#0b1727']} />
@@ -99,19 +93,21 @@ function StarterWorld({ settings, resetVersion }: { settings: SceneSettings; res
       )}
       {settings.showAxes && <axesHelper args={[2.15]} position={[-2.3, 0.01, 2.2]} />}
       <OriginPlinth running={settings.animateBeacon} />
+      <RobotArm pose={pose} />
       <CameraRig preset={settings.camera} resetVersion={resetVersion} />
     </>
   );
 }
 
-export function StarterScene({ settings, resetVersion, onReady }: {
+export function StarterScene({ settings, resetVersion, onReady, pose }: {
   settings: SceneSettings;
   resetVersion: number;
   onReady: () => void;
+  pose: RobotPose;
 }) {
   return (
     <Canvas
-      aria-label="Interactive three-dimensional calibration scene"
+      aria-label="Interactive articulated robotic arm three-dimensional scene"
       shadows
       dpr={[1, 1.75]}
       camera={{ fov: 42, near: 0.1, far: 70, position: [6.8, 5.2, 7.4] }}
@@ -119,7 +115,7 @@ export function StarterScene({ settings, resetVersion, onReady }: {
       onCreated={onReady}
       fallback={<div className="canvas-fallback" role="alert">3D rendering requires WebGL. Try Chrome or Safari with hardware acceleration enabled.</div>}
     >
-      <StarterWorld settings={settings} resetVersion={resetVersion} />
+      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} />
     </Canvas>
   );
 }

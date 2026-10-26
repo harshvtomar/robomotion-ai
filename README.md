@@ -1,31 +1,15 @@
-# RoboMotion AI
+# RoboMotion AI — Stage 2: Articulated 3D Robot (v0.2.0)
 
-**Stage 1 — Foundation & Engineering Workspace**  
-A future gesture-controlled robotic arm digital twin, starting with a real React/Three.js calibration scene.
+An interactive **manual-control robotic arm digital twin prototype** built with React 19, TypeScript, Three.js, React Three Fiber and Vite. The procedural 3D arm, six joint channels and Stage 1 calibration workspace run completely in the browser—no hardware, webcam or server required.
 
-> **Scope honesty:** Stage 1 contains **no robotic arm model, inverse kinematics, gesture recognition, physics engine, or real hardware control**. These belong to future stages. The current animated object is a neutral origin calibration beacon, not a robot.
+> Scope: This is a **kinematic hierarchy visualization driven by manual joint angles**, not a physical robot, inverse-kinematics solver, grasp simulator or gesture-recognition system. Those features are planned for later stages.
 
-## What works in Stage 1 source
+## Getting started on Mac
 
-- React + TypeScript + Vite application shell
-- Three.js scene through React Three Fiber, with OrbitControls
-- Origin calibration plinth, lighting, grid and coordinate axes
-- Isometric/front/top camera presets and camera reset
-- Grid and axes visibility toggles, pause/resume beacon animation
-- Responsive dark engineering dashboard and eight-stage roadmap
-- Pure scene state reducer, unit tests, and browser/WebGL fallbacks
-- CI workflow and handoff documentation
-
-**Verification status:** Source tests and independent TypeScript core checks were run in the authoring container. Full React/Three.js dependency installation, production build and browser verification **were blocked by npm registry DNS/network access**. Do not interpret source tests as end-to-end browser QA. See `docs/QA.md`.
-
-## Run on Mac (no downloads except required npm dependencies)
-
-Requires Node.js 22 or later, a modern browser and internet access for the initial dependency install.
+Prerequisites: Node.js 22.12+ and internet for the first npm installation.
 
 ```bash
-unzip RoboMotion_AI_Stage1.zip
-cd robomotion-ai-stage1
-node --version
+cd ~/Downloads/robomotion-ai-stage2
 npm install
 npm test
 npm run typecheck
@@ -33,51 +17,55 @@ npm run build
 npm run dev
 ```
 
-Open the local URL printed by Vite (usually `http://127.0.0.1:5173`). Use a local server, **not** double-clicking `index.html`, which relies on the Vite dev/build pipeline.
+Open the local URL printed by Vite, typically `http://127.0.0.1:5173`.
 
-For dependency-free source tests (Node 22+), use `npm test` without `npm install`. Run `npm run typecheck:core` only if a globally installed `tsc` or the local TypeScript dependency is available.
+**When upgrading from Stage 1:** Extract Stage 2 into its own folder. The ZIP contains the full Stage 1 foundation plus Stage 2 files. Avoid overlaying a running Stage 1 folder. If port 5173 is occupied, stop the Stage 1 dev server with Ctrl+C before starting Stage 2. No local installation of robotic hardware or SDKs is required.
 
-## Workspace controls
+## Controls
 
-| Input | Outcome |
-| --- | --- |
-| Drag on 3D viewer | Rotate scene orbit |
-| Scroll / pinch | Zoom |
-| Camera select | Choose isometric, front or top |
-| Grid | Toggle reference grid |
-| Axes | Toggle XYZ axes |
-| Pause/Play | Stop/start calibration beacon only |
-| Reset view | Restore settings and camera |
+1. **3D viewport:** Drag to rotate the orbit camera and scroll to zoom. Select **isometric/front/top** in the Scene Inspector. **Reset view** restores the camera and Stage 1 grid/axes/beacon settings without changing the robot pose.
+2. **Stage 1 controls:** Toggle **Grid**, **Axes** and **Pause beacon** (the reference beacon animation). Pausing the beacon does *not* pause manual robot commands.
+3. **Stage 2 joint console:** Six labelled sliders (base yaw, shoulder, elbow, wrist pitch, wrist roll and gripper opening), with keyboard-capable native `<input type="range">` controls and fine +/- buttons.
+4. **Quick poses:** Home, Upright, Inspect, Folded. **Reset pose** restores the home pose, independently of camera reset.
+5. **Safety in simulation:** Commands are clamped to defined numeric limits and non-finite/unknown inputs are rejected in the pure reducer. Limits are demonstrative, not certified for hardware.
 
-> The dashboard is a **simulation foundation**, not a physical robot or industrial motion controller.
+## Manual joint ranges
 
-## Folder guide
+| Joint | Command range | Mechanism |
+| --- | --- | --- |
+| Base | -170° to +170° | Yaw about vertical (+Y) |
+| Shoulder | -80° to +80° | Pitch around local Z |
+| Elbow | -135° to +135° | Relative pitch around local Z |
+| Wrist pitch | -100° to +100° | Relative pitch around local Z |
+| Wrist roll | -170° to +170° | Tool-head rotation around local Y |
+| Gripper | 0 to 100% | Symmetric movement of two fingers |
 
-- `src/App.tsx` — app shell and Stage 1 scene settings
-- `src/components/StarterScene.tsx` — Three.js calibration model and viewport
-- `src/components/SceneErrorBoundary.tsx` — WebGL failure experience
-- `src/core/stage1.ts` — pure contracts, presets, reducer and stage definitions
-- `src/styles.css` — responsive visual design
-- `tests` — dependency-free source/domain tests
-- `PROJECT_STATE.md` / `NEXT_STAGE.md` — resume the next chat safely
-- `docs/ARCHITECTURE.md` — implementation/design decisions
-- `docs/QA.md` — verification evidence and limitations
+The arm is a hierarchical **procedural stylized model** with base/shoulder/elbow/wrist pivots, link casings, accent panels, mechanical hinges, and parallel fingers. It is not a downloaded rigged model or an engineering-certified CAD model.
 
-## Useful commands
+## Verification
 
 ```bash
-npm run preflight         # show environment readiness
-npm test                  # dependency-free Node tests
-npm run typecheck:core    # pure TypeScript logic only
-npm run typecheck         # full application check (requires npm install)
-npm run build             # Vite production build (requires npm install)
-npm run preview           # serve existing dist locally
+npm test                 # dependency-free node test runner; original regressions + Stage 2 tests
+npm run typecheck:core   # pure TypeScript contracts
+npm run typecheck        # full React/Three.js check; requires npm install
+npm run build            # production bundle; requires npm install
+npm run verify           # test, typecheck and build
 ```
 
-## Future stages
+See [`STAGE_2_COMPLETION_REPORT.md`](STAGE_2_COMPLETION_REPORT.md) for the results achieved in this chat/runtime and checks still pending on your Mac. Do not claim a successful live browser or WebGL verification without running it locally.
 
-Stage 2: actual articulated 3D robot with user-operated joint controls. Stage 3: kinematics. Stage 4: manipulation. Stage 5: gesture recognition. Stage 6: mapping. Stage 7: engineering dashboard. Stage 8: full QA. See `NEXT_STAGE.md`.
+## Source map
 
-## License
+- `src/core/stage1.ts` — preserved Stage 1 scene settings and camera reducer
+- `src/core/robot.ts` — new pure Stage 2 joint limits, reducer, presets, smoothing
+- `src/components/StarterScene.tsx` — preserved Stage 1 Canvas with Stage 2 arm mounted
+- `src/components/RobotArm.tsx` — new articulated 3D model and animation
+- `src/App.tsx` — preserved dashboard with Stage 2 joint-console section
+- `tests/` — original tests, updated Stage 2 content assertion, additional robot tests
+- `PROJECT_STATE.md`, `NEXT_STAGE.md` — state and Stage 3 contract
 
-MIT — see `LICENSE`. No external fonts, models or copyrighted art are bundled.
+## Credits and portfolio honesty
+
+Designed and implemented as a software simulation. Do not describe it as a built physical arm or claim real-world measurement, hardware control, autonomous pick-and-place or webcam functionality. Record a browser demonstration after verifying the UI on your own Mac.
+
+MIT License. Existing Stage 1 source and test history preserved in included `.git` baseline (when present).

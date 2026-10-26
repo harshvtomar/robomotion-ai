@@ -1,12 +1,10 @@
-# ChatGPT Work integration checkpoint
+# Handoff to future ChatGPT Work session
 
-There is no remote repository or deployment yet. First, upload Stage 1 ZIP or open the extracted local project with ChatGPT Work; do not regenerate the entire scaffold.
+**Project:** RoboMotion AI  
+**Latest packaged stage:** v0.2.0 / Stage 2  
+**Input:** full `RoboMotion_AI_Stage2_Articulated_Arm.zip` (use attached ZIP, not old Stage 1 source)  
+**Next intended chat stage:** Stage 3 (only on user request)
 
-1. Inspect source, `PROJECT_STATE.md`, and `docs/QA.md`.
-2. With working network, run `npm install`, check package peers, commit `package-lock.json`.
-3. Run `npm test`, `npm run typecheck`, `npm run build` and fix any genuine errors.
-4. Start dev server and test camera, grid, axes, animation, reset in real browser. Record screenshots and console findings.
-5. Only then set up remote GitHub repo and optional deployment if explicitly requested; do not claim published before verifying.
-6. When moving to Stage 2, preserve all Stage 1 code and rollback path.
+This is a local project. It has **not** been pushed to GitHub or deployed by this conversation. Stage 1 browser preview and production build were verified on the user's Mac prior to this chat, but the Stage 2 browser rendering is not verified on Mac yet.
 
-Stage 1 does not require Work if the user's Mac can complete browser checks. Work is a fallback for tooling and deployment.
+When transferring to ChatGPT Work, inspect actual files, rerun test/build/visual QA, fix any errors, and publish only on explicit request. Preserve original repo and existing test history; do not claim autonomous behavior or hardware proof.

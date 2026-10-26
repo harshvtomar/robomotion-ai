@@ -1,9 +1,9 @@
 {
   "name": "robomotion-ai",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
-  "description": "RoboMotion AI — Stage 1 foundation for a gesture-controlled robotic arm digital twin.",
+  "description": "RoboMotion AI \u2014 Stage 2 articulated robotic arm with bounded manual joint controls.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
@@ -30,5 +30,7 @@
     "typescript": "^5.9.3",
     "vite": "^7.3.7"
   },
-  "engines": { "node": ">=22.12.0" }
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }
