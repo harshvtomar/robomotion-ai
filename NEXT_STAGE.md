@@ -1,19 +1,32 @@
-# RoboMotion AI — Stage 7 handoff (not started)
+# RoboMotion AI — Stage 8 Handoff (not started)
 
-## Baseline
+## Current baseline
 
-Use the **actual v0.6.0 source ZIP** from Stage 6. Never regenerate the project. Stages 1–5 remain intact and Stage 6 adds live opt-in simulation-only hand control.
+The supplied full `RoboMotion_AI_Stage7_Engineering_Diagnostics.zip` derives from the verified Stage 6 source, with Stage 7 additive engineering diagnostics, session event exports and a camera framing toggle. Do not restart from a new template.
 
-**Before Stage 7, verify on the Mac**: `npm test`, `npm run typecheck`, `npm run build`, browser UI; camera open-palm calibration, arm, bounded hand-to-robot movement, Fist hold, Pinch/Peace virtual gripper, synthetic blocked, manual override, stale/no-hand disarm, E-stop latched and reset. Record failing behavior rather than mark untested checks passed.
+## Required Stage 7 acceptance on the Mac
 
-## Proposed Stage 7 scope
+Run `npm install`, `npm test`, `npm run typecheck`, `npm run build`, then `npm run dev`; record the actual results. Check:
 
-- Add engineering metrics for active pose, calibrated mapping, IK rejection, target-versus-commanded error, motion timing, confidence/stable gesture history and safety interventions.
-- User-friendly guided demo, event timeline (session-local by default) and experiment exports that do NOT contain webcam video.
-- Clear accessibility/readability improvements, keyboard shortcuts, camera auto-framing and responsive 3D viewport presentation.
-- Maintain clear separation between camera observations and explicit gated simulation control.
-- Add meaningful diagnostics/QA and comprehensive regression tests.
+1. WebGL scene, six joint controls, old camera presets, grid/axes/beacon, IK and manual target movement.
+2. Sample A pickup/docking with occupancy; sampled collision and E-stop rejection remain intact.
+3. Live 21-landmark camera overlay, calibration, live gesture motion, synthetic fixture isolation, loss-of-hand disarming, manual override, fist hold and E-stop recovery.
+4. `Focus arm / Wide scene` produces two useful framings and still allows orbit/zoom.
+5. Diagnostics counts reflect simulation actions; events appear in the timeline, filter works, clear empties history and CSV/JSON download locally. Verify exported files contain no camera image/landmarks.
+6. Guided demo can start/restart/stop and its checkboxes have **no automatic robot effects**.
+7. Chrome Console has no unhandled exceptions; responsive/narrow view, keyboard navigation and reduced-motion behavior remain useful.
+
+## Suggested Stage 8 responsibilities
+
+- Final end-to-end acceptance and bug fixes (not a rewrite).
+- Browser/WebGL gesture stability and accessibility testing across representative screen sizes.
+- Diagnostics and trajectory accuracy review against explicit tolerances and observed failure cases.
+- Bundle chunk splitting and initial model-load performance optimization; avoid claiming improvements without measurements.
+- Publish to GitHub and deploy public demo only after device/camera permission/security review.
+- Portfolio case study, engineering limitations, reproducible acceptance evidence, realistic resume bullet points and a short recorded demo.
 
 ## Non-goals
 
-No physical hardware/serial/Bluetooth actuation, no facial identity inference, no raw webcam upload, no automatic release of carried samples, and no Stage 8 publishing/comprehensive final release work during Stage 7.
+Do not add physical actuators, uncertified hardware safety claims, raw webcam upload, identity recognition, or fabricated performance metrics.
+
+**Stage 8 has not been started.**

@@ -1,48 +1,36 @@
-# RoboMotion AI — Verified source state
+# RoboMotion AI — project state (Stage 7 implementation)
 
-**Current implementation:** v0.6.0 · Stage 06 of 08 — Gesture-to-Robot Simulation Control.  
-**Baseline preserved:** Stage 5 v0.5.0 ZIP, verified on the user's Mac with live MediaPipe tracking, calibrated webcam, synthetic gestures, and a successful Stage 4 virtual docking.
+- **Version:** 0.7.0
+- **Source lineage:** Stage 6 full verified-source ZIP `RoboMotion_AI_Stage6_Gesture_Robot_Integration.zip` → Stage 7 additive changes
+- **Implemented:** Stages 1–7, preserving the exact Stage 6 gesture gating and earlier manual robotics paths
+- **Stage 7 scope delivered:** engineering dashboard; event taxonomy; local bounded timeline; CSV/JSON export; five-step optional demo; robot-focused camera toggle; responsive diagnostics layout
+- **Progress:** 7 of 8 development stages implemented (87.5% by stage count, not production-readiness percentage)
 
-## Stages retained
+## Regression evidence
 
-1. React/Vite/R3F engineering workspace, camera/orbit/grid/axis controls and responsive UI.
-2. Articulated robotic arm (six manual channels), bounded slider inputs, presets.
-3. Analytic forward/position-only inverse kinematics, reachable-workspace and bounded target motion.
-4. Virtual samples and docks with close-to-grasp / dock-to-release and sampled tool/object clearance checks.
-5. Opt-in MediaPipe hand-tracking, 21 landmarks, live gesture classifier, neutral-palm calibration and synthetic fixtures.
-6. New independent **operator-armed, live-camera-only virtual teleoperation** with normalized calibrated offset mapping, IK, bounded speed, collision screening, Fist HOLD, Pinch virtual close, Peace virtual open, no-hand/stale tracking disarm, manual override, and emergency-stop latch.
+- Stage 6 archive baseline: **203/203 tests passed** before changes.
+- Stage 7 suite: **241/241 Node tests passed** (includes 38 new tests).
+- `npm run typecheck:core`: passed, including Stage 7 telemetry domain.
+- TypeScript/TSX syntactic parsing: see Stage 7 completion report.
+- Full application TypeScript/Vite build: **pending on Mac**, because npm package downloads are inaccessible in this execution environment.
+- Full browser, WebGL and webcam QA: **pending on Mac**. The user confirmed that Stage 6 motion resumed; Stage 7 controls are not yet independently verified in a browser.
 
-## Safety and scope
+## Safety and privacy invariants
 
-- All gesture control is **disabled by default** and operates **only the 3D simulation**, never motors or hardware.
-- Operator must start live webcam, calibrate an open palm, present a stable open palm/point and **click Arm live gestures**.
-- Calibration is anchored to the current TCP on arming, preventing an immediate target jump; translation is clipped per axis and arm motion is rate limited.
-- Synthetic fixtures are **never allowed to arm** the robot, even if synthetic calibration exists. Switching to synthetic mode, stopping the camera, losing tracking or stale frames immediately cancels gesture authority.
-- Manual sliders/pose presets/IK target requests and manipulation operations disarm teleoperation. Grasp/release remain manual safety-checked operations; gesture Pinch/Peace change finger spacing only, **no automatic pick/drop**.
-- Emergency stop cancels active target motion and blocks manual, IK, and object-motion commands until explicit Reset stop; reset leaves gesture control disabled.
-- Stage 4 trajectory sampling checks virtual tool against samples. **Not** full-arm dynamics, self collision, industrial e-stop, or certified physical safety.
+1. No physical robot driver or external hardware control.
+2. Stage 6 `canArm`, `handleGestureFrame`, `expireTracking`, `gesturePoseStep` and E-stop gating remain in charge of all movement.
+3. Synthetic hand fixtures cannot arm the robot or drive joints.
+4. Manual commands disarm gesture control and E-stop remains latched until explicitly reset.
+5. Session diagnostics never store webcam frames, landmarks, image blobs, recordings or identity information.
+6. Export is initiated only by the operator; clearing telemetry is explicit. No browser storage or network telemetry is used.
 
-## Current verification
+## Known engineering limitations
 
-- Baseline Stage 5 before changes: **158/158 Node tests passed**.
-- Stage 6 regression: **203/203 Node tests passed**, zero skipped or failed.
-- Strict dependency-free core TypeScript: passed.
-- TypeScript/TSX source parsing: 18/18 files passed (no syntax diagnostics).
-- Full React type-check, production Vite build, live gesture-actuation / webcam scenario: **must be executed on Mac** with installed npm dependencies; npm registry unavailable in creation container.
+- Dashboard motion metrics are based on **commanded** robot pose. Camera tracking and render settling may lag.
+- CSV/JSON history is bounded, not a complete permanent audit log.
+- Reversible camera focus is approximate framing, not adaptive object-bounds fitting.
+- Test source lineage includes Stage 6 Git history; no Stage 8 work has been performed.
 
-## Local commands
+## Next action
 
-```bash
-cd ~/Downloads/robomotion-ai-stage6
-npm install
-npm test
-npm run typecheck
-npm run build
-npm run dev
-```
-
-Use the **exact Vite Local URL** displayed (ports 5173–5179 may be occupied). Follow `docs/QA.md` before declaring Mac completion.
-
-## Next
-
-Stage 7 Engineering Dashboard/Diagnostics is **not started**. See `NEXT_STAGE.md`.
+Run all Mac checks in `docs/QA.md`, including repeated gesture movement, manual override, gripper, E-stop, diagnostics exports and console errors. Then start **Stage 8 — Final Integration & QA** from this archive only.

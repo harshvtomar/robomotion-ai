@@ -70,5 +70,5 @@ test('S5 adapter loads pinned WASM and the approved model only upon start',()=>{
 });
 test('S5 app links gesture lab without replacing the existing robot controls',()=>{
  const src=readFileSync(new URL('../src/App.tsx',import.meta.url),'utf8');
- for(const str of ['<GestureLab ','<RobotControls','<TargetControls','<ManipulationControls','06 / 08'])assert.ok(src.includes(str),str);
+ for(const str of ['<GestureLab ','<RobotControls','<TargetControls','<ManipulationControls','07 / 08'])assert.ok(src.includes(str),str);
 });

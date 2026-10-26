@@ -10,16 +10,18 @@ import { RobotArm } from './RobotArm';
 import { VirtualStations } from './VirtualObjects';
 import type { VirtualObject } from '../core/manipulation';
 
-function CameraRig({ preset, resetVersion }: { preset: CameraPreset; resetVersion: number }) {
+function CameraRig({ preset, resetVersion, focusRobot }: { preset: CameraPreset; resetVersion: number; focusRobot: boolean }) {
   const { camera, invalidate } = useThree();
   useEffect(() => {
     const pose = CAMERA_PRESETS[preset];
-    camera.position.set(pose.x, pose.y, pose.z);
-    camera.lookAt(0, 1.35, 0);
+    const scale=focusRobot ? 0.73 : 1;
+    const targetY=focusRobot ? 1.8 : 1.35;
+    camera.position.set(pose.x*scale, targetY+(pose.y-1.35)*scale, pose.z*scale);
+    camera.lookAt(0, targetY, 0);
     camera.updateProjectionMatrix();
     invalidate();
-  }, [camera, preset, resetVersion, invalidate]);
-  return <OrbitControls key={`${preset}:${resetVersion}`} target={[0, 1.35, 0]} enableDamping dampingFactor={0.08} minDistance={3.3} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
+  }, [camera, preset, resetVersion, focusRobot, invalidate]);
+  return <OrbitControls key={`${preset}:${resetVersion}:${focusRobot}`} target={[0, focusRobot ? 1.8 : 1.35, 0]} enableDamping dampingFactor={0.08} minDistance={2.8} maxDistance={19} minPolarAngle={0.06} maxPolarAngle={Math.PI / 2.04} enablePan={false} />;
 }
 
 function CalibrationBeacon({ running }: { running: boolean }) {
@@ -78,7 +80,7 @@ function OriginPlinth({ running }: { running: boolean }) {
   );
 }
 
-function StarterWorld({ settings, resetVersion, pose, target, objects, heldId, frozen }: { settings: SceneSettings; resetVersion: number; pose: RobotPose; target: Vector3 | null; objects: VirtualObject[]; heldId: string | null; frozen: boolean }) {
+function StarterWorld({ settings, resetVersion, pose, target, objects, heldId, frozen, focusRobot }: { settings: SceneSettings; resetVersion: number; pose: RobotPose; target: Vector3 | null; objects: VirtualObject[]; heldId: string | null; frozen: boolean; focusRobot:boolean }) {
   return (
     <>
       <color attach="background" args={['#0b1727']} />
@@ -105,12 +107,12 @@ function StarterWorld({ settings, resetVersion, pose, target, objects, heldId, f
           <axesHelper args={[0.32]} />
         </group>
       )}
-      <CameraRig preset={settings.camera} resetVersion={resetVersion} />
+      <CameraRig preset={settings.camera} resetVersion={resetVersion} focusRobot={focusRobot} />
     </>
   );
 }
 
-export function StarterScene({ settings, resetVersion, onReady, pose, target, objects, heldId, frozen = false }: {
+export function StarterScene({ settings, resetVersion, onReady, pose, target, objects, heldId, frozen = false, focusRobot = true }: {
   settings: SceneSettings;
   resetVersion: number;
   onReady: () => void;
@@ -119,6 +121,7 @@ export function StarterScene({ settings, resetVersion, onReady, pose, target, ob
   objects: VirtualObject[];
   heldId: string | null;
   frozen?: boolean;
+  focusRobot?: boolean;
 }) {
   return (
     <Canvas
@@ -130,7 +133,7 @@ export function StarterScene({ settings, resetVersion, onReady, pose, target, ob
       onCreated={onReady}
       fallback={<div className="canvas-fallback" role="alert">3D rendering requires WebGL. Try Chrome or Safari with hardware acceleration enabled.</div>}
     >
-      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} target={target} objects={objects} heldId={heldId} frozen={frozen} />
+      <StarterWorld settings={settings} resetVersion={resetVersion} pose={pose} target={target} objects={objects} heldId={heldId} frozen={frozen} focusRobot={focusRobot} />
     </Canvas>
   );
 }

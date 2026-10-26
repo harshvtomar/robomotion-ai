@@ -1,9 +1,9 @@
 {
   "name": "robomotion-ai",
   "private": true,
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "module",
-  "description": "RoboMotion AI Stage 6: explicitly armed, calibrated webcam control of a simulated arm with safe hold and emergency stop.",
+  "description": "RoboMotion AI Stage 7: simulation-only robotics workspace with session-local engineering diagnostics, guided demonstration, privacy-safe exports, and preserved gesture safety controls.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",

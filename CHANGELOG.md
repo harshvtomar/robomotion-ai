@@ -62,3 +62,11 @@
 - Stage 5 webcam remains opt-in and camera tracks clean up; calibration now accumulates open-palm frames only.
 - Preserved all previous features; updated historical source expectation, added 45 Stage 6 safety/regression tests (total 203 passing).
 - No physical hardware interfacing; Stage 7 deliberately excluded.
+
+## v0.7.0 — Engineering dashboard and diagnostics
+
+- Added a session-local bounded timeline with whitelisted events, sanitization and exportable CSV/JSON data; no stored webcam frames or raw landmarks.
+- Added live commanded pose/target error, motion and safety counts, controller status and five-step guided demo.
+- Added reversible Focus arm / Wide scene camera framing and responsive engineering diagnostics panel.
+- Preserved all Stage 1–6 functions, prior regression tests and safety controls.
+- Added 38 Stage 7 tests; no Stage 8 work started.

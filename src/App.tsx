@@ -13,6 +13,10 @@ import { planMotion, sampleMotion } from './core/motion';
 import { ManipulationControls } from './components/ManipulationControls';
 import { GestureLab } from './components/GestureLab';
 import { GestureControlPanel } from './components/GestureControlPanel';
+import { EngineeringDashboard } from './components/EngineeringDashboard';
+import { emptyDiagnostics, recordEvent, diagnosticsCsv, diagnosticsJson } from './core/diagnostics';
+import type { DiagnosticCode } from './core/diagnostics';
+import type { GestureName } from './vision/gestures';
 import {initialGestureControl,armGestureControl,disableGestureControl,emergencyStop,resetEmergencyStop,handleGestureFrame,expireTracking,gesturePoseStep,canArm} from './core/gesture-control';
 import type {GestureControlState,GestureFrame} from './core/gesture-control';
 import { checkTrajectory, createInitialManipulation, graspObject, releaseObject, GRIP_CLOSED, GRIP_RELEASED, objectById, dockById } from './core/manipulation';
@@ -33,7 +37,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <div><div className="brand-title">ROBO<span>MOTION</span></div><div className="brand-subtitle">ENGINEERING LAB <b>AI</b></div></div>
           <button type="button" className="mobile-close icon-btn" aria-label="Close menu" onClick={onClose}><Icon name="close" /></button>
         </div>
-        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.6</span></div>
+        <div className="sidebar-tag"><span className="tiny-dot" /> PROJECT WORKSPACE <span className="tag-version">V0.7</span></div>
         <div className="nav-label">PROJECT</div>
         <nav aria-label="Project navigation" className="nav-list">
           <a href="#workspace" className="nav-item nav-active" onClick={onClose}><Icon name="cube" /> 3D Workspace <span className="nav-highlight" /></a>
@@ -42,6 +46,7 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
           <a href="#object-controls" className="nav-item" onClick={onClose}><Icon name="cube" /> Object Manipulation</a>
           <a href="#gesture-controls" className="nav-item" onClick={onClose}><Icon name="monitor" /> Hand Gesture Lab</a>
           <a href="#gesture-robot" className="nav-item" onClick={onClose}><Icon name="orbit" /> Gesture Robot Control</a>
+          <a href="#diagnostics" className="nav-item" onClick={onClose}><Icon name="shield" /> Engineering Diagnostics <span className="soon">LIVE</span></a>
           <a href="#overview" className="nav-item" onClick={onClose}><Icon name="layers" /> Overview</a>
           <a href="#build-roadmap" className="nav-item" onClick={onClose}><Icon name="compass" /> Build Roadmap</a>
         </nav>
@@ -49,13 +54,13 @@ function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => 
         <div className="nav-list">
           <a href="#target-controls" className="nav-item" onClick={onClose}><Icon name="orbit" /> Inverse Kinematics <span className="soon">LIVE</span></a>
           <a href="#gesture-controls" className="nav-item" onClick={onClose}><Icon name="monitor" /> Gesture Recognition <span className="soon">LIVE</span></a>
-          <div className="nav-item nav-disabled" aria-disabled="true"><Icon name="shield" /> Diagnostics <span className="soon">S7</span></div>
+          <a href="#diagnostics" className="nav-item" onClick={onClose}><Icon name="shield" /> Diagnostics <span className="soon">LIVE</span></a>
         </div>
         <div className="sidebar-bottom">
           <div className="side-progress">
-            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>06 <em>/ 08</em></strong></div>
-            <div className="progress-track"><span style={{ width: `${600 / STAGE_TOTAL}%` }} /></div>
-            <p>Safe gesture-to-robot control</p>
+            <div className="side-progress-top"><span>BUILD PROGRESS</span><strong>07 <em>/ 08</em></strong></div>
+            <div className="progress-track"><span style={{ width: `${700 / STAGE_TOTAL}%` }} /></div>
+            <p>Engineering dashboard &amp; diagnostics</p>
           </div>
           <div className="side-signature"><span className="signature-mark">◈</span><span>Designed to build real understanding.<br /><strong>One stage at a time.</strong></span></div>
         </div>
@@ -170,20 +175,60 @@ function Stat({ label, value, sub }: { label: string; value: string; sub: string
 export default function App() {
   const [settings, dispatch] = useReducer(sceneReducer, INITIAL_SCENE);
   const [robotPose, robotDispatch] = useReducer(robotReducer, HOME_POSE);
+  // Only event codes and non-biometric descriptive labels are recorded in memory.
+  const [diagnostics,setDiagnostics]=useState(()=>recordEvent(emptyDiagnostics(),'SESSION_STARTED','Stage 7 simulator session',Date.now()));
+  function logDiagnostic(code:DiagnosticCode,detail:string,durationMs?:number){
+    setDiagnostics(state=>recordEvent(state,code,detail,Date.now(),durationMs));
+  }
+  const [cameraSummary,setCameraSummary]=useState<{gesture:GestureName|null;source:string;confidence:number|null;calibrated:boolean}>({gesture:null,source:'idle',confidence:null,calibrated:false});
+  const lastRecordedGesture=useRef<string|null>(null);
+  const lastSummaryAt=useRef(0);
+  function downloadDiagnostics(format:'csv'|'json'){
+    const content=format==='csv'?diagnosticsCsv(diagnostics.events):diagnosticsJson(diagnostics.events);
+    const blob=new Blob([content],{type:format==='csv'?'text/csv;charset=utf-8':'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    try { const anchor=document.createElement('a');anchor.href=url;anchor.download=`robomotion-session-events.${format}`;document.body.append(anchor);anchor.click();anchor.remove(); }
+    finally { window.setTimeout(()=>URL.revokeObjectURL(url),1000); }
+  }
   const [gestureControl,setGestureControl] = useState<GestureControlState>(initialGestureControl);
   const gestureRef=useRef<GestureControlState>(gestureControl);
   const latestGestureFrame=useRef<GestureFrame|null>(null);
   const [liveEligible,setLiveEligible]=useState(false);
-  function updateGestureControl(next:GestureControlState){gestureRef.current=next;setGestureControl(next);}
+  function updateGestureControl(next:GestureControlState){
+    const previous=gestureRef.current;
+    gestureRef.current=next;setGestureControl(next);
+    if(previous.mode!==next.mode){
+      if(next.mode==='armed') logDiagnostic('CONTROL_ARMED','Live calibrated camera armed');
+      if(next.mode==='estop') logDiagnostic('CONTROL_STOPPED','Emergency stop latched');
+      if(previous.mode==='estop'&&next.mode==='disabled') logDiagnostic('STOP_RESET','Stop reset; remains disabled');
+      else if(previous.mode==='armed'&&next.mode==='disabled'){
+        if(/stale|gap|hand lost|camera|frame/i.test(next.reason))logDiagnostic('TRACKING_LOST','Tracking unavailable; disarmed');
+        else logDiagnostic('CONTROL_DISABLED','Gesture controller disarmed');
+      }
+    }
+  }
   function disableTeleop(reason='Manual controls took priority; gesture control disarmed.'){
-    if(gestureRef.current.mode==='armed') updateGestureControl(disableGestureControl(gestureRef.current,reason));
+    if(gestureRef.current.mode==='armed') {logDiagnostic('MANUAL_OVERRIDE','Manual command took control');updateGestureControl(disableGestureControl(gestureRef.current,reason));}
   }
   function eStop(){cancelMotion();updateGestureControl(emergencyStop(gestureRef.current));setMotionMessage('EMERGENCY STOP: all simulated motion disabled until reset.');}
   function onGestureUnavailable(reason:string){
     latestGestureFrame.current=null;setLiveEligible(false);disableTeleop(reason);
+    setCameraSummary({gesture:null,source:'idle',confidence:null,calibrated:false});
+    lastRecordedGesture.current=null;logDiagnostic('CAMERA_UNAVAILABLE','Camera unavailable or hand observation ended');
   }
   function onGestureFrame(frame:GestureFrame){
     latestGestureFrame.current=frame;
+    const summaryAt=performance.now();
+    if(summaryAt-lastSummaryAt.current>300){
+      lastSummaryAt.current=summaryAt;
+      setCameraSummary({gesture:frame.gesture,source:frame.source,confidence:frame.observation?.confidence??null,calibrated:!!frame.calibration});
+    }
+    if(frame.source==='camera'&&frame.gesture!==lastRecordedGesture.current){
+      if(lastRecordedGesture.current===null)logDiagnostic('CAMERA_AVAILABLE','Live camera observations started');
+      lastRecordedGesture.current=frame.gesture;
+      logDiagnostic('GESTURE_CHANGED',`Observed: ${frame.gesture}`);
+    }
+
     setLiveEligible(canArm(frame,performance.now(),manipulation.heldId)===null);
     const before=gestureRef.current;
     if(before.mode!=='armed') return;
@@ -194,9 +239,9 @@ export default function App() {
     const dt=Math.min(0.15,Math.max(0,(frame.atMs-(before.lastCommandAt??frame.atMs))/1000));
     if(dt<=0) return;
     const step=gesturePoseStep(currentPose.current,outcome.command,dt);
-    if(!step.ok){updateGestureControl({...outcome.state,reason:step.reason,lastCommandAt:frame.atMs});return;}
+    if(!step.ok){if(before.reason!==step.reason)logDiagnostic('GESTURE_TARGET_REJECTED','Gesture IK target rejected');updateGestureControl({...outcome.state,reason:step.reason,lastCommandAt:frame.atMs});return;}
     const safety=checkTrajectory(manipulation,currentPose.current,step.pose);
-    if(!safety.ok){updateGestureControl({...outcome.state,reason:`Gesture motion blocked: ${safety.reason}`,lastCommandAt:frame.atMs});return;}
+    if(!safety.ok){if(before.reason!==safety.reason)logDiagnostic('TRAJECTORY_REJECTED','Gesture path blocked');updateGestureControl({...outcome.state,reason:`Gesture motion blocked: ${safety.reason}`,lastCommandAt:frame.atMs});return;}
     currentPose.current=step.pose;
     robotDispatch({type:'SET_POSE',pose:step.pose});
     gestureRef.current={...outcome.state,lastCommandAt:frame.atMs};
@@ -205,6 +250,7 @@ export default function App() {
     if(gestureRef.current.mode==='estop') return;
     const next=armGestureControl(gestureRef.current,latestGestureFrame.current,currentPose.current,performance.now(),manipulation.heldId);
     if(next.mode==='armed') {cancelMotion();setApproachingObjectId(null);setMotionMessage('Live gesture control active. Manual actions disarm it.');}
+    if(next.mode!=='armed')logDiagnostic('CONTROL_ARM_REJECTED','Arming rejected: live calibrated hand required');
     updateGestureControl(next);
   }
   useEffect(()=>{
@@ -217,6 +263,7 @@ export default function App() {
   },[]);
 
   const [sceneReady, setSceneReady] = useState(false);
+  const [focusRobot,setFocusRobot] = useState(true);
   const [manipulation,setManipulation] = useState(createInitialManipulation);
   const [selectedObjectId,setSelectedObjectId] = useState('sample-1');
   const [selectedDockId,setSelectedDockId] = useState('dock-a');
@@ -232,7 +279,7 @@ export default function App() {
   const currentPose=useRef<RobotPose>(robotPose);
   currentPose.current=robotPose;
   function cancelMotion() {
-    if(motionFrame.current!==null){cancelAnimationFrame(motionFrame.current);motionFrame.current=null;}
+    if(motionFrame.current!==null){cancelAnimationFrame(motionFrame.current);motionFrame.current=null;logDiagnostic('TARGET_CANCELLED','Target motion interrupted');}
     setMoving(false);
   }
   useEffect(()=>()=>{if(motionFrame.current!==null) cancelAnimationFrame(motionFrame.current);},[]);
@@ -248,7 +295,7 @@ export default function App() {
       setManipulationMessage(drop.message);
     }
     const safety=checkTrajectory(manipulation,from,next);
-    if(!safety.ok){setManipulationMessage(`Motion rejected: ${safety.reason}`);return;}
+    if(!safety.ok){setManipulationMessage(`Motion rejected: ${safety.reason}`);logDiagnostic('TRAJECTORY_REJECTED','Manual joint trajectory blocked');return;}
     cancelMotion();
     setApproachingObjectId(null);
     setMotionMessage('Manual joint control active. Target trajectory cancelled.');
@@ -278,8 +325,9 @@ export default function App() {
     if(moving){setManipulationMessage('Allow the robot to finish moving before grasping.');return;}
     const closed={...currentPose.current,gripper:GRIP_CLOSED};
     const result=graspObject(manipulation,selectedObjectId,closed);
-    if(!result.ok){setManipulationMessage(result.reason);return;}
+    if(!result.ok){setManipulationMessage(result.reason);logDiagnostic('SAMPLE_REJECTED','Grasp constraints rejected');return;}
     cancelMotion();
+    logDiagnostic('SAMPLE_GRASPED',`Grasped ${selectedObjectId}`);
     robotDispatch({type:'SET_JOINT',joint:'gripper',value:GRIP_CLOSED});
     setManipulation(result.state);
     setManipulationMessage(result.message);
@@ -290,8 +338,9 @@ export default function App() {
     disableTeleop();
     if(moving){setManipulationMessage('Allow the robot to finish moving before releasing.');return;}
     const result=releaseObject(manipulation,selectedDockId,currentPose.current);
-    if(!result.ok){setManipulationMessage(result.reason);return;}
+    if(!result.ok){setManipulationMessage(result.reason);logDiagnostic('SAMPLE_REJECTED','Release constraints rejected');return;}
     cancelMotion();
+    logDiagnostic('SAMPLE_DOCKED',`Docked at ${selectedDockId}`);
     setManipulation(result.state);
     robotDispatch({type:'SET_JOINT',joint:'gripper',value:GRIP_RELEASED});
     setManipulationMessage(result.message);
@@ -299,6 +348,7 @@ export default function App() {
   function resetObjects(){
     if(gestureRef.current.mode==='estop'){setManipulationMessage('E-stop active: reset first.');return;}
     disableTeleop();cancelMotion();
+    logDiagnostic('OBJECTS_RESET','Virtual sample stations restored');
     setManipulation(createInitialManipulation());
     setSelectedObjectId('sample-1');setSelectedDockId('dock-a');setApproachingObjectId(null);
     setManipulationMessage('Three samples restored to source stations.');
@@ -307,14 +357,15 @@ export default function App() {
     if(gestureRef.current.mode==='estop'){setMotionMessage('E-stop active: reset before target movement.');return;}
     disableTeleop();cancelMotion();
     const point=pointFromDraft(targetDraft);
-    if(!point){setMotionMessage('Target must contain three valid coordinates.');return;}
+    if(!point){setMotionMessage('Target must contain three valid coordinates.');logDiagnostic('TARGET_REJECTED','Invalid target coordinates');return;}
     const result=inverseKinematics(point,currentPose.current);
-    if(!result.ok){setMotionMessage(result.message);return;}
+    if(!result.ok){setMotionMessage(result.message);logDiagnostic('TARGET_REJECTED','Target outside reach or joint constraints');return;}
     const allowPickup=approachingObjectId && objectById(manipulation,approachingObjectId);
     const safety=checkTrajectory(manipulation,currentPose.current,result.pose,
       allowPickup && distance(point,allowPickup.position)<0.015 ? approachingObjectId : null);
-    if(!safety.ok){setMotionMessage(safety.reason);setManipulationMessage(`Target motion blocked: ${safety.reason}`);return;}
+    if(!safety.ok){setMotionMessage(safety.reason);setManipulationMessage(`Target motion blocked: ${safety.reason}`);logDiagnostic('TRAJECTORY_REJECTED','Target trajectory blocked');return;}
     const plan=planMotion(currentPose.current,result.pose);
+    logDiagnostic('TARGET_STARTED','Coordinated target requested');
     const started=performance.now();
     setMoving(true);
     setMotionMessage(`Coordinated motion in progress (${plan.durationSeconds.toFixed(2)} s planned).`);
@@ -322,7 +373,7 @@ export default function App() {
       const elapsed=(now-started)/1000;
       robotDispatch({type:'SET_POSE',pose:sampleMotion(plan,elapsed)});
       if(elapsed<plan.durationSeconds){motionFrame.current=requestAnimationFrame(tick);}
-      else { motionFrame.current=null; setMoving(false);setMotionMessage(`Target command reached; planned duration ${plan.durationSeconds.toFixed(2)} s. Await visual settling.`); }
+      else { motionFrame.current=null; setMoving(false);logDiagnostic('TARGET_REACHED','Coordinated target command complete',Math.max(0,now-started));setMotionMessage(`Target command reached; planned duration ${plan.durationSeconds.toFixed(2)} s. Await visual settling.`); }
     };
     motionFrame.current=requestAnimationFrame(tick);
   }
@@ -330,6 +381,7 @@ export default function App() {
   function resetWorkspace() {
     disableTeleop();
     dispatch({ type: 'RESET' });
+    setFocusRobot(true);
     setResetVersion((version) => version + 1);
   }
 
@@ -338,13 +390,13 @@ export default function App() {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <main className="main" id="workspace">
         <header className="topbar">
-          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 06</span></div>
-          <div className="topbar-right"><span className="dot-status" /><span>GESTURE CONTROL READY</span><span className="version-pill">v0.6.0</span></div>
+          <div className="topbar-left"><button type="button" className="mobile-menu icon-btn" aria-label="Open menu" onClick={() => setMobileOpen(true)}><Icon name="menu" /></button><span>RoboMotion AI</span><span className="breadcrumb-slash">/</span><strong>Workspace</strong><span className="topbar-stage">STAGE 07</span></div>
+          <div className="topbar-right"><span className="dot-status" /><span>DIAGNOSTICS ONLINE</span><span className="version-pill">v0.7.0</span></div>
         </header>
 
         <div className="page-content">
           <section className="intro" id="overview">
-            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 005</span></div>
+            <div className="eyebrow"><span className="eyebrow-line" /> ROBOTICS LABORATORY <span className="eyebrow-num">/ 007</span></div>
             <div className="intro-heading"><div><h1>The future is <em>built.</em></h1><p>Your interactive engineering workspace. Explore the 3D scene, establish the coordinate system, manually control the arm, solve target coordinates with forward/inverse kinematics, run time-bounded joint motion, manipulate virtual samples between elevated stations, and optionally use a calibrated live webcam to control the simulated arm behind deliberate safety interlocks.</p></div><div className="intro-orbit" aria-hidden="true"><span className="orbit-ring orb-a" /><span className="orbit-ring orb-b" /><span className="orbit-center" /></div></div>
           </section>
 
@@ -355,9 +407,9 @@ export default function App() {
                 <div className="viewport-top"><div className="viewport-title"><span className="live-ring" /> LIVE 3D VIEWPORT <span className="viewport-divider">/</span> <span className="view-soft">ARTICULATED ARM</span></div><div className="viewport-top-right"><span>WEBGL</span><span className="mini-separator">·</span><span>{sceneReady ? 'RENDERER READY' : 'INITIALIZING'}</span></div></div>
                 <div className="scene-window">
                   <SceneErrorBoundary>
-                    <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} frozen={gestureControl.mode==='estop'} onReady={() => setSceneReady(true)} />
+                    <StarterScene settings={settings} resetVersion={resetVersion} pose={robotPose} target={goal} objects={manipulation.objects} heldId={manipulation.heldId} frozen={gestureControl.mode==='estop'} focusRobot={focusRobot} onReady={() => setSceneReady(true)} />
                   </SceneErrorBoundary>
-                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-06</span><span>6 joints · Position IK · Procedural model</span></div>
+                  <div className="scene-corner scene-top-left"><span className="scene-corner-title">ROBOT / RM-07</span><span>6 joints · Position IK · Procedural model</span></div>
                   <div className="scene-corner scene-bottom-left"><span className="scene-led" /> <span>{settings.animateBeacon ? 'BEACON ACTIVE' : 'BEACON PAUSED'}</span></div>
                   <div className="scene-corner scene-bottom-right"><span>DRAG TO ROTATE</span><span className="zoom-help">SCROLL TO ZOOM</span></div>
                 </div>
@@ -365,6 +417,7 @@ export default function App() {
                   <div className="toolbar-group">
                     <button className={`tool-button ${settings.showGrid ? 'tool-active' : ''}`} type="button" aria-pressed={settings.showGrid} onClick={() => dispatch({ type: 'TOGGLE_GRID' })} title="Toggle reference grid"><Icon name="grid" size={16} /> Grid</button>
                     <button className={`tool-button ${settings.showAxes ? 'tool-active' : ''}`} type="button" aria-pressed={settings.showAxes} onClick={() => dispatch({ type: 'TOGGLE_AXES' })} title="Toggle coordinate axes"><Icon name="axis" size={16} /> Axes</button>
+                    <button type="button" className={`tool-button ${focusRobot ? 'tool-active' : ''}`} aria-pressed={focusRobot} onClick={()=>setFocusRobot(v=>!v)} title="Toggle robot-focused camera framing">{focusRobot?'Focus arm':'Wide scene'}</button>
                     <span className="tool-divider" />
                     <button className="tool-button" type="button" aria-pressed={settings.animateBeacon} onClick={() => dispatch({ type: 'TOGGLE_MOTION' })}><Icon name={settings.animateBeacon ? 'pause' : 'play'} size={16} /> {settings.animateBeacon ? 'Pause beacon' : 'Play beacon'}</button>
                   </div>
@@ -383,9 +436,9 @@ export default function App() {
                   <span className="control-label">SCENE INFORMATION</span>
                   <dl className="property-list"><div><dt>Coordinate system</dt><dd>Right-handed</dd></div><div><dt>Up axis</dt><dd>+Y</dd></div><div><dt>Workspace size</dt><dd>{WORKSPACE.width} × {WORKSPACE.depth} m</dd></div><div><dt>Grid divisions</dt><dd>{WORKSPACE.gridDivisions}</dd></div><div><dt>Camera</dt><dd>{CAMERA_LABELS[settings.camera]}</dd></div><div><dt>Manual channels</dt><dd>6</dd></div></dl>
                   <div className="inspector-rule" />
-                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 6 · Optional teleoperation</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Live webcam gestures can operate only the simulated robot after explicit arming.</p></div></div>
+                  <div className="foundation-callout"><span className="callout-symbol"><Icon name="spark" size={17}/></span><div><strong>Stage 7 · Engineering diagnostics</strong><p>Manual controls and analytic target positioning are available. Six elevated test stations still support virtual sample pickup and placement. Live webcam gestures can operate only the simulated robot after explicit arming.</p></div></div>
                 </div>
-                <div className="inspector-footer"><span className="footer-led"/>STAGE 06 / 08 <span className="footer-right">GESTURE DRIVE</span></div>
+                <div className="inspector-footer"><span className="footer-led"/>STAGE 07 / 08 <span className="footer-right">DIAGNOSTICS</span></div>
               </aside>
             </div>
           </section>
@@ -403,27 +456,33 @@ export default function App() {
             onArm={armLiveGesture} onDisable={()=>updateGestureControl(disableGestureControl(gestureRef.current))}
             onEmergency={eStop} onReset={()=>updateGestureControl(resetEmergencyStop(gestureRef.current))} />
 
+          <EngineeringDashboard pose={robotPose} target={goal} mode={gestureControl.mode} reason={gestureControl.reason}
+            observedGesture={cameraSummary.gesture} source={cameraSummary.source} confidence={cameraSummary.confidence} calibrated={cameraSummary.calibrated}
+            moving={moving} heldLabel={manipulation.objects.find(o=>o.id===manipulation.heldId)?.label??null} dockings={manipulation.placedCount}
+            events={diagnostics.events} onExportCsv={()=>downloadDiagnostics('csv')} onExportJson={()=>downloadDiagnostics('json')}
+            onClear={()=>setDiagnostics(emptyDiagnostics())}/>
+
           <section className="metrics-section" aria-label="Project engineering indicators">
-            <Stat label="DEVELOPMENT STAGE" value="06 / 08" sub="Safety-gated teleoperation" />
+            <Stat label="DEVELOPMENT STAGE" value="07 / 08" sub="Engineering diagnostics" />
             <Stat label="SCENE RENDERER" value="Three.js" sub="WebGL · React Three Fiber" />
             <Stat label="REFERENCE AXES" value="X · Y · Z" sub="Right-handed coordinate system" />
-            <Stat label="ROBOT CONTROL" value="TELEOP" sub="Opt-in simulation only" />
+            <Stat label="ROBOT CONTROL" value="TELEOP + QA" sub="Session-local diagnostics" />
           </section>
 
           <section className="roadmap" id="build-roadmap">
             <div className="section-line roadmap-line"><div><span className="section-number">03</span><h2>The build roadmap</h2></div><span className="section-aside">8 DEVELOPMENT STAGES</span></div>
             <div className="roadmap-list">
               {DEVELOPMENT_STAGES.map((stage, index) => (
-                <div className={`roadmap-item ${index === 5 ? 'roadmap-current' : ''}`} key={stage}>
+                <div className={`roadmap-item ${index === 6 ? 'roadmap-current' : ''}`} key={stage}>
                   <span className="roadmap-index">{String(index + 1).padStart(2, '0')}</span>
                   <span className="roadmap-title">{stage}</span>
-                  <span className={`roadmap-status ${index === 5 ? 'current-status' : ''}`}>{index < 5 ? 'COMPLETE' : index === 5 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
-                  <span className="roadmap-indicator">{index <= 5 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
+                  <span className={`roadmap-status ${index === 6 ? 'current-status' : ''}`}>{index < 6 ? 'COMPLETE' : index === 6 ? 'CURRENT STAGE' : 'UPCOMING'}</span>
+                  <span className="roadmap-indicator">{index <= 6 ? <Icon name="check" size={15}/> : <Icon name="arrow" size={16}/>}</span>
                 </div>
               ))}
             </div>
           </section>
-          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 6 · Calibrated live gestures · Simulation only</span></footer>
+          <footer className="page-footer"><span>ROBOMOTION AI <b>·</b> ENGINEERING FIRST</span><span>Stage 7 · Session-local telemetry · Simulation only</span></footer>
         </div>
       </main>
     </div>
