@@ -18,7 +18,11 @@ The objective was to connect a procedurally modeled articulated robot to coordin
 
 ## Verification evidence
 
-Stage 7 historical baseline: 241/241 automated tests passed, and user-shared Mac screenshots show a successful Stage 7 production build and engineering dashboard. Stage 8 inherits those tests and adds release-specific checks; consult the completion report for the actual Stage 8 test totals. Stage 8 production build, responsive WebGL/browser tests and release hosting remain to be confirmed on the Mac. Do not extrapolate zero error or high gesture accuracy beyond tested demonstrations.
+Publication validation on 26 October 2026 ran 261 deterministic tests with zero failures, full TypeScript validation, a Vite production build and the release safety audit. The project owner separately confirmed seven final Mac/browser acceptance checks, including camera-driven simulation. These are owner-reported device checks, not repeated camera tests by the publication agent.
+
+The measured largest JavaScript chunk is 952,670 bytes, approximately 24% below the approximate Stage 7 screenshot baseline of 1,254,140 bytes. Four JavaScript assets total 1,395,599 bytes. Lazy loading separates the renderer and on-demand vision runtime; this does not establish a runtime FPS improvement. Vite's large-chunk warning remains disclosed.
+
+See [publication QA](PUBLICATION_QA.md) for hosted CI, deployment and public-browser results. No measured human gesture accuracy or physical end-effector precision is claimed.
 
 ## Why this is relevant to Builders.mu
 

@@ -4,15 +4,14 @@
 
 RoboMotion AI is a browser-based articulated robotic-arm demonstrator. It combines 3D manual control, forward/inverse kinematics, virtual pick-and-place, opt-in webcam landmarks, bounded gesture-driven motion, and session-local engineering diagnostics. **It is not a physical robot, a safety-certified device, or an error-free commercial product.**
 
-## Run on your Mac
+## Install and run
 
-Requirements: macOS, Node 22.12+, an up-to-date Chrome/Safari browser with WebGL, internet for npm and first MediaPipe model/WASM download, optional webcam permission for live controls.
+Requirements: Node 22.12+, an up-to-date Chrome/Safari browser with WebGL, internet for npm and first MediaPipe model/WASM download, optional webcam permission for live controls.
 
 ```bash
-cd ~/Downloads
-unzip RoboMotion_AI_Stage8_Final_Release.zip
-cd robomotion-ai-stage8
-npm install
+git clone https://github.com/harshvtomar/robomotion-ai.git
+cd robomotion-ai
+npm ci
 npm test
 npm run typecheck
 npm run build
@@ -39,18 +38,25 @@ Open the **exact** `http://127.0.0.1:PORT/` shown in the Vite output. Existing S
 
 ## Verification
 
-- The inherited Stage 7 source baseline passed **241/241** automated Node tests in the development environment.
-- New Stage 8 tests and release audits are included; results from the actually executed checks are documented in `STAGE_8_COMPLETION_REPORT.md`.
-- The previous Stage 7 project passed a Mac TypeScript/production build and displayed a working diagnostics dashboard in user screenshots. That is **not** a Stage 8 Mac build confirmation.
-- Stage 8 device-dependent checks — actual webcam tracking, 3D renderer, focus framing, CSV/JSON download behavior, responsiveness, live movement and hosted deployment — remain pending until explicitly tested.
+[![Tests and Build](https://github.com/harshvtomar/robomotion-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/harshvtomar/robomotion-ai/actions/workflows/ci.yml)
 
-Run `npm run verify` locally after successful dependency installation. `npm run report:bundle` writes `reports/bundle-report.json` only after a successful build, showing actual JS asset bytes. Smaller chunks alone do not prove better runtime speed.
+Publication validation on 26 October 2026: **261 tests passed, zero failures**, TypeScript, production build and release audit passed using Node 24.22.1. A committed dependency lockfile supports `npm ci`; hosted workflows use Node 22. The project owner confirmed seven final Mac/browser acceptance checks separately. Hosted CI and public-browser evidence are tracked in [the publication report](docs/PUBLICATION_QA.md).
+
+Measured local production JavaScript: **1,395,599 bytes across four chunks**; largest renderer chunk **952,670 bytes (930.3 KiB)**. This is approximately 24% smaller than the approximate Stage 7 screenshot baseline (1,254,140 bytes), not a runtime speed measurement. Vite still warns about a chunk exceeding 500 kB; the warning has not been suppressed. `npm audit` reported zero known vulnerabilities for this lockfile on this date.
+
+Run `npm run verify` for tests, type checking, build, release checks and a fresh bundle report.
+
+## Architecture and robotics
+
+React coordinates pure TypeScript modules for joint state, FK/IK, bounded motion, manipulation, gesture safeguards and diagnostics. React Three Fiber renders the nested articulated meshes using Three.js; the scene and MediaPipe runtime load separately from the main interface. See [architecture](docs/ARCHITECTURE.md).
+
+Five rotational channels (base, shoulder, elbow, wrist pitch and wrist roll) plus a gripper-width channel form six controls. The analytical position IK uses an upright tool constraint; it is not a general six-axis pose solver. Commanded joint angles drive FK in a right-handed, Y-up coordinate frame. Grasping and docking use proximity and occupancy rules, with sampled tool/object clearance checks.
 
 ## Privacy, limitations and provenance
 
 The app does not deliberately record or upload webcam frames. MediaPipe model and WASM assets load from third-party servers on first use and may have independent diagnostics; see `docs/PRIVACY_AND_LIMITATIONS.md`. Diagnostic exports contain whitelisted simulator events and timestamps, not images/hand landmarks. IK target error is based on **commanded pose**, not physical measurement. Collision checks are partial; the gripper is a discrete virtual state, not force physics.
 
-The complete Stage 1–7 history is included in the ZIP. The source was extended in Stage 8 rather than rebuilt. No hosted live URL, CI success, real-world hand tracking accuracy or physical hardware demonstration is claimed.
+The complete Stage 1–7 history is included in the ZIP. The source was extended in Stage 8 rather than rebuilt. Publication evidence is recorded separately; no real-world hand-tracking accuracy or physical hardware demonstration is claimed.
 
 ## Portfolio, deployment and release evidence
 
