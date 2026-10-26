@@ -225,3 +225,27 @@ h1 em { color: var(--orange); font-style: normal; }
 .ik-invalid{background:#3c2c2a;color:#f0ad8e;border:1px solid #81524b}
 @media(max-width:1250px){.kinematics-grid{grid-template-columns:1fr 1fr}.kin-card:first-child{grid-column:1/-1}}
 @media(max-width:680px){.kinematics-grid{grid-template-columns:1fr;padding:12px}.kin-card:first-child{grid-column:auto}.kinematics-head{padding:18px 15px;flex-direction:column;align-items:flex-start}}
+
+/* Stage 4 object laboratory; previous stage styles remain unchanged. */
+.manipulation-section { margin-top:22px; background:#0e1b2a; border:1px solid #2b4355; border-radius:12px; overflow:hidden; scroll-margin-top:20px; }
+.manipulation-head { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:24px 25px; background:linear-gradient(110deg,#173143,#0e1d2e); }
+.manipulation-head h2 { margin:9px 0; font-size:23px; letter-spacing:-.5px; }
+.manipulation-head p { max-width:770px; color:#9aafbf; font-size:12px; line-height:1.65; margin:0; }
+.manipulation-status { display:flex; flex-wrap:wrap; justify-content:space-between; gap:16px; align-items:center; border-block:1px solid #2c4054; padding:14px 24px; background:#112234; }
+.manipulation-status>div { display:flex; flex-direction:column; gap:6px; }
+.manipulation-status strong { font-size:13px; color:#86e0ca; }
+.manip-label { color:#859eb4; font-size:10px; letter-spacing:1.1px; font-weight:800; }
+.manipulation-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:13px; padding:18px; }
+.manip-card { min-width:0; border-radius:9px; border:1px solid #2d475b; padding:17px; background:#101f30; }
+.manip-card h3 { display:flex; align-items:center; gap:10px; color:#f7ad77; margin:0 0 17px; font-size:13px; }
+.manip-card h3 span { color:#eff5f9; }
+.manip-card select { width:100%; background:#1b3042; color:#e4eef4; border:1px solid #466176; padding:10px; border-radius:6px; margin:9px 0; }
+.manip-card p,.manip-hint,.manip-card li { color:#9eb4c4; font-size:11px; line-height:1.7; }
+.manip-card ul { padding-left:19px; }
+.manip-actions { display:flex; flex-wrap:wrap; gap:8px; margin:15px 0; }
+.manip-actions button { background:#26394c; border:1px solid #476178; color:#ebf5fa; padding:9px 11px; border-radius:6px; font-size:11px; font-weight:750; }
+.manip-actions button.manip-primary { background:#efa66f; color:#142232; border-color:#f2b688; }
+.manip-actions button:disabled { opacity:.38; cursor:not-allowed; }
+.manipulation-message { padding:14px 24px; color:#9ce6d8; font-size:12px; min-height:43px; border-top:1px solid #2d4359; }
+@media(max-width:1200px){.manipulation-grid{grid-template-columns:1fr 1fr}.manip-card:last-child{grid-column:1/-1}}
+@media(max-width:700px){.manipulation-grid{grid-template-columns:1fr}.manip-card:last-child{grid-column:auto}.manipulation-head{padding:20px 16px;flex-direction:column;align-items:flex-start}.manipulation-status{padding:14px}}

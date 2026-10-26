@@ -1,3 +1,7 @@
+# RoboMotion AI v0.4.0 — Gesture-Controlled Robotic Arm Digital Twin
+
+**Current stage:** Stage 4 / 8 — Virtual Object Manipulation. This is a simulation only; webcam gesture input starts in later stages.
+
 # RoboMotion AI — Stage 3: Kinematics & Motion Control (v0.3.0)
 
 An interactive **software robotic-arm prototype** built with React 19, TypeScript, Three.js/React Three Fiber and Vite. Stage 1's 3D calibration scene and Stage 2's six-joint manual arm are preserved. Stage 3 adds **forward kinematics**, **bounded analytic position-only inverse kinematics**, **reachable-target feedback**, a target marker and **coordinated finite-duration joint commands**.
@@ -69,3 +73,31 @@ npm run verify         # test + full typecheck + build
 Describe this as a **gesture-control-ready robotic arm simulation with tested position kinematics**; webcam and gesture recognition are not yet present (Stages 5–6). Do not claim real-world engineering calibration, autonomous physical robotic manipulation or collision-tested robotic hardware. For the Masters' Union application, film a working browser demonstration on your own Mac after completing browser verification.
 
 MIT License; Stage 1/2 source and historical test suites retained.
+
+
+## Stage 4: Pick-and-place demonstration
+
+1. Use the **Virtual Object Manipulation** panel. Choose **Sample A** and click **Load pickup coordinates**.
+2. In the preserved **Target Kinematics** console, click **Move to target** and let the 3D arm finish settling.
+3. Click **Grasp & close**. The sample should attach to the gripper.
+4. Select **Dock A** and **Load destination**; use **Move to target** again.
+5. Click **Release & open** to place the sample safely. Repeat for samples B and C.
+
+Invalid proximity, out-of-workspace placement, occupied docks, sample overlap, and sampled tool/object collision are rejected with feedback. This is discrete virtual grasping on **elevated fixtures**—not collision-free planning, full-body dynamics or a physical robot.
+
+### Mac installation / verification
+
+```bash
+cd ~/Downloads
+unzip RoboMotion_AI_Stage4_Virtual_Object_Manipulation.zip
+cd robomotion-ai-stage4
+npm install
+npm test
+npm run typecheck
+npm run build
+npm run dev
+```
+
+Open the Vite local URL printed in Terminal. Do not assume a port; prior stage servers may use ports 5173–5175. See `docs/QA.md` for complete browser acceptance tests. 139 Node tests passed in the authoring environment; full React/Vite build and live Chrome rendering are **pending Mac verification**.
+
+Next is Stage 5 **webcam gesture recognition only**, not yet implemented. `NEXT_STAGE.md` contains the separate handoff.

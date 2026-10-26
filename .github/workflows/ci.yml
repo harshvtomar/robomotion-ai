@@ -1,4 +1,4 @@
-name: RoboMotion Stage 2 CI
+name: RoboMotion Stage 4 CI
 on:
   push:
   pull_request:

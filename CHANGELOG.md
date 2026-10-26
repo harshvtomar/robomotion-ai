@@ -34,3 +34,14 @@
 - Added finite-duration coordinated motion plans, cancel/stop and manual override.
 - Added 40 new unit/invariant tests; combined 114/114 passed; updated historical Stage 2 content assertions for current capabilities.
 - Updated architecture, QA, README, handoff and stage state; deferred Stage 4 objects/collision/grasp logic.
+
+## v0.4.0 — Stage 4: Virtual Object Manipulation (2026-10-26)
+
+- Added three distinct virtual test objects and six elevated reachable virtual stations.
+- Added pickup/destination selection and Stage 3 IK target shortcuts, close-to-grasp and dock-to-release controls.
+- A held sample follows the visual wrist-roll group, not a detached world-position estimate.
+- Added pure state transitions for proximity, gripper closure, dock occupancy and workspace/overlap checks.
+- Added time-sampled tool/carried-object clearance checks (other samples only, not full-arm physics).
+- Preserved Stage 1–3 UI, pose limits, six sliders, camera controls, analytic IK and trajectory commands.
+- Updated prior version-gated source-contract tests and added 25 Stage 4 regression tests, for 139 total passing Node tests.
+- Stage 5 webcam recognition intentionally excluded.

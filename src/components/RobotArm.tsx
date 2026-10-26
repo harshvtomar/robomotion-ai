@@ -3,9 +3,11 @@ import { useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { degreesToRadians, easeJoint, fingerOffset, HOME_POSE } from '../core/robot';
 import type { JointKey, RobotPose } from '../core/robot';
+import type { VirtualObject } from '../core/manipulation';
+import { SampleMesh } from './VirtualObjects';
 
 /** Procedural, articulated robot; all axes defined in local parent space.
- * No external meshes/assets, inverse kinematics, grasp physics or hardware claims.
+ * No external meshes/assets, grasp physics or hardware claims. Stage 4 adds only simulated held-object visuals.
  * Rotations are applied by refs each frame to avoid rerendering heavy geometry.
  */
 const BODY = '#234763';
@@ -86,7 +88,7 @@ function Finger({ side }: { side: -1 | 1 }) {
   );
 }
 
-export function RobotArm({ pose }: { pose: RobotPose }) {
+export function RobotArm({ pose, held }: { pose: RobotPose; held?: VirtualObject | null }) {
   const base = useRef<Group>(null);
   const shoulder = useRef<Group>(null);
   const elbow = useRef<Group>(null);
@@ -155,6 +157,7 @@ export function RobotArm({ pose }: { pose: RobotPose }) {
                   <boxGeometry args={[0.52, 0.13, 0.26]} />
                   <meshStandardMaterial color={BODY} metalness={0.77} roughness={0.3} />
                 </mesh>
+                {held && <group position={[0, 0.36, 0]}><SampleMesh object={held} /></group>}
                 <group ref={fingerLeft} position={[-fingerOffset(HOME_POSE.gripper), 0.20, 0]}>
                   <Finger side={-1} />
                 </group>

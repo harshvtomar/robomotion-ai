@@ -1,9 +1,9 @@
 {
   "name": "robomotion-ai",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
-  "description": "RoboMotion AI \u2014 Stage 3 analytic forward/inverse kinematics and coordinated target motion.",
+  "description": "RoboMotion AI Stage 4: virtual object pickup, grasping, docking and collision checks.",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",

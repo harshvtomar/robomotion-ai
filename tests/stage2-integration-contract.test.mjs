@@ -35,9 +35,9 @@ test('70: per-frame updates use dt-aware smooth interpolation', () => {
   assert.match(src, /useFrame\(\(_, delta\)/);
   assert.match(src, /easeJoint\(current\.current\[key\], pose\[key\], delta\)/);
 });
-test('71: Stage 3 implements IK separately without advancing to physical manipulation', () => {
+test('71: Stage 3 IK remains separate from full collision physics and hardware control', () => {
   assert.match(read('src/App.tsx'), /Target kinematics console/);
-  assert.match(read('src/App.tsx'), /No obstacle avoidance, guaranteed collision-free path, or object grasping/);
+  assert.match(read('src/App.tsx'), /not full-body collision avoidance or grasp-force physics/);
   assert.doesNotMatch(read('src/core/robot.ts'), /MediaPipe/);
 });
 test('72: 3D scene preserves Stage 1 calibration base and toggles', () => {
@@ -47,8 +47,8 @@ test('72: 3D scene preserves Stage 1 calibration base and toggles', () => {
 test('73: all Stage 2 handoff documents present', () => {
   for(const f of ['README.md','PROJECT_STATE.md','NEXT_STAGE.md','STAGE_2_COMPLETION_REPORT.md','docs/ARCHITECTURE.md','docs/QA.md']) assert.ok(present(f),f);
 });
-test('74: project version advanced while retaining all existing dependencies', () => {
+test('74: project version advanced to Stage 4 while retaining all existing dependencies', () => {
   const p=JSON.parse(read('package.json'));
-  assert.equal(p.version,'0.3.0');
+  assert.equal(p.version,'0.4.0');
   for (const d of ['react','three','@react-three/fiber','@react-three/drei']) assert.ok(p.dependencies[d]);
 });

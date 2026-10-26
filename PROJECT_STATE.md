@@ -1,38 +1,41 @@
-# Project State — RoboMotion AI
+# RoboMotion AI — Current Project State
 
-- **Version:** 0.3.0
-- **Development checkpoint:** Stage 3 of 8 — Kinematics and Motion Control
-- **Starting source:** Existing full Stage 2 project (`RoboMotion_AI_Stage2_Articulated_Arm.zip`), base Git commit `1b183bf`, 74 original tests passing before Stage 3.
-- **Implementation:** Preserves current full React/Three/R3F UI, scene tools and all 6 manual joints, preset controls and home/reset. Adds forward kinematics, analytic target IK, reach error feedback, target gizmo, coordinated controlled joint motion, cancellation.
-- **Stage 3 tests:** 114/114 Node tests passed (74 modified historical baselines/regressions + 40 new tests). `tsc -p tsconfig.core.json` passed; syntax transpilation reported zero errors on updated TS/TSX files.
-- **Unverified here:** full npm dependency installation, React/Three type checking, production Vite build, actual browser/WebGL animation, mobile accessibility and macOS browser QA (registry unavailable in this environment). Prior Stage 2 Mac build cannot substitute for Stage 3 verification.
+**Version:** 0.4.0 · **Stage:** 4 of 8 — Virtual Object Manipulation  
+**Source baseline:** Stage 3 verified on user's Mac in earlier conversation; complete original Stage 3 source copied without reset. Git history preserved.  
+**Repository:** local project only; this ZIP does not represent a GitHub push or deployment.
 
-## Design decisions
+## Implemented in Stage 4
 
-- Exact Stage 2 local parent axes and origins modeled; shoulder Y=1.12, L1=1.16, L2=0.96, upright TCP wrist extension=0.72.
-- `forwardKinematics` mathematically computes the commanded tool point from 4 rotational joints; wrist-roll and gripper opening have no effect on a point on tool's axis.
-- `inverseKinematics` is position-only with fixed upright tool orientation (world pitch 0). It explores elbow-up/down and two yaw directions, verifies strict actuator ranges and FK residual, and selects the nearest feasible configuration to current commanded pose. Failure is explicit, no invalid pose is dispatched.
-- `planMotion`/`sampleMotion` create an eased synchronized bounded pose interpolation with per-joint speed ceilings. A user Stop, manual control, preset or target edit cancels remaining queued animation frames.
-- The R3F visual arm uses the pre-existing exponentially filtered joint display; UI FK reports commanded states and may lead visual mesh briefly. No physical feedback/actuation exists.
+- Three coloured procedurally rendered virtual samples (box, sphere, octahedron) plus 3 pickup stations and 3 destination docks.
+- R3F scene stations and free samples; a held sample becomes a child of the Stage 2/3 wrist-roll group at the Stage 3 TCP offset, so it follows **visually smoothed** joint animation.
+- Select sample / load pickup coordinates / use existing IK Move to target / close-and-grasp within 0.19 m.
+- Select target dock / load dock coordinates / move via existing Stage 3 IK / release only within 0.19 m of a free docking station with non-overlapping geometry.
+- Discrete state transitions in `src/core/manipulation.ts`, workspace/floor checks, occupied-dock checks, static sample bounding-sphere overlaps, and **sampled TCP-plus-held-object versus static sample** path clearance checks.
+- Manual joint controls and pose presets preserved; manual actions are checked against approximate object clearances. Gripper opening while holding requires a valid dock release.
+- A reset of just the virtual-object state. Stage 1 scene reset and Stage 2 robot-pose reset remain separate.
+- New Stage 4 UI and styles, 0.4.0 versioning, source tests, Mac verification guide, and handoff.
 
-## Out of scope
+## Verification completed here
 
-- Stage 4: physical interactions, pick/release mechanics, collision detection/physics and placement objects **not started**.
-- Stage 5: webcam, hand recognition **not started**.
-- Stage 6: gesture mapping **not started**.
-- Stage 7: advanced diagnostics **not started**.
-- Stage 8: full final integration/portfolio QA **not started**.
-- Remote GitHub push/public hosting not done in this conversation.
+- 139/139 Node tests passed (114 Stage 1–3 regression tests + 25 new Stage 4 cases), zero failures.
+- Core TypeScript typecheck `npm run typecheck:core` passed.
+- Dependency-independent transpile syntax checks of all 14 TypeScript/TSX/config files passed.
+- Tested success-path calculations for all three source-to-matching-dock transfers and failure cases (invalid pickup, invalid dock, overlap, occupied dock, unreachable/out-of-bounds, collision).
 
-## Mac acceptance
+## Verification still required
 
-1. Extract ZIP into separate `~/Downloads/robomotion-ai-stage3` directory.
-2. Run `npm install && npm test && npm run typecheck && npm run build` with full internet/dependencies.
-3. `npm run dev`; open actual Vite URL. Check full 3D viewport, manual sliders, presets, reset view/pose, grid/axes/beacon, browser console.
-4. Click Home TCP, verify green target marker, `REACHABLE`, hit **Move to target**. Choose Demo point and verify joint values smoothly change and point error ends within ~0.015 m (allowing rendering interpolation to settle).
-5. Enter impossible coordinates e.g X=9,Y=2,Z=0; verify denied and no unexpected robot move. Change targets during motion and hit Stop; verify cancellation. Check narrow viewport and no console exceptions.
-6. Save terminal results/screenshots for final review before beginning Stage 4.
+- This environment lacks React/Three/Vite dependencies; **full React `npm run typecheck`, Vite `npm run build`, and Chrome WebGL/interactive QA have not passed here**. Check them on your Mac using `docs/QA.md` before declaring Stage 4 accepted.
+- The commanded TCP may briefly lead the visual arm during easing. Let the animated arm settle before grasp/release.
+- Current collision approximation does **not** guarantee self-collision safety, arm-link collisions with stands, grasp-force stability, physical dynamics, or true rigid-body physics. The elevated stations are **virtual fixtures** used because Stage 3's upright IK cannot reach ordinary floor-level samples.
+- No real camera, hand gesture recognition, real robot integration, or hardware actuation exists.
+
+## Stage boundary
+
+- Stage 5 hand gesture recognition **NOT started**.
+- Stage 6 gesture-to-robot mapping **NOT started**.
+- Stage 7 engineering diagnostics **NOT started**.
+- Stage 8 final end-to-end QA and public deployment **NOT started**.
 
 ## Continue
 
-Attach this Stage 3 full ZIP in the next conversation; read `NEXT_STAGE.md`. Never start again from Stage 1. Do not claim Mac acceptance until it runs.
+Use this entire Stage 4 ZIP, never restart from an earlier stage. Run `npm install && npm test && npm run typecheck && npm run build && npm run dev` on your Mac, inspect WebGL behaviour using `docs/QA.md`, then proceed with Stage 5 only if requested.
