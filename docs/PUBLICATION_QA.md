@@ -25,6 +25,7 @@ The cloud browser loaded the application shell and fallback, but its GPU/WebGL r
 | Check | Observation |
 |---|---|
 | Desktop 1440 x 1000 | Renderer ready; real arm, station objects and controls visible; screenshot committed |
+| Narrow viewport 390 x 844 | Menu opened and navigated to workspace; 3D scene visible; document width equals viewport width (390 px), no horizontal overflow |
 | Framing and camera | Focus arm / Wide scene toggle and Front camera preset responded |
 | Manual channels | All six increment controls changed values; base keyboard ArrowRight changed 26 to 27 degrees |
 | Pose preset | Inspect set base -40, shoulder -40, elbow 95, pitch -55, roll 38, gripper 100 |
@@ -42,3 +43,15 @@ Camera-driven control is not newly verified in this session. No authentic video 
 
 ## Owner-confirmed prior evidence
 Seven final Mac/browser acceptance checks, including camera-driven simulation, were confirmed by the owner in the publication request. They have not been re-performed here. No authentic video has been recorded in this session.
+
+## Final documentation checkpoint
+
+Documentation and real desktop screenshot CI passed at f845638cb34ae025f84054ec39051a15204957c1: https://github.com/harshvtomar/robomotion-ai/actions/runs/40306684344 . The subsequent documentation-only update adds narrow-viewport evidence and its screenshot; application source, lockfile and build configuration are unchanged. Consult the Actions badge and v0.8.0 release for the final run links.
+
+## Remaining optional owner actions
+
+- Record the authentic 60–90-second video using DEMO_SCRIPT.md; include live webcam only if actually recorded.
+- Recheck CSV/JSON file downloads in an ordinary browser; automation stalled and could not confirm file completion. Prior owner-confirmed local exports are distinct evidence.
+- Public live-camera calibration and motion were not re-tested; cloud camera was unavailable.
+
+Publication and core public simulation QA are complete. These limitations prevent claiming exhaustive device coverage or a recorded video.
